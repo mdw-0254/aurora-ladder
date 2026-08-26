@@ -1,0 +1,44 @@
+{
+  "name": "aurora-vpn",
+  "version": "1.0.0",
+  "description": "AuroraVPN - 简约精致的 Windows 代理客户端（Electron + Vue 3 + Vite），支持订阅导入、多节点、Shadowsocks、系统代理、实时流量监控、双主题",
+  "main": "electron/main.js",
+  "author": "歌者超",
+  "license": "MIT",
+  "keywords": [
+    "vpn",
+    "vpn-client",
+    "proxy",
+    "proxy-client",
+    "代理",
+    "代理客户端",
+    "网络代理",
+    "electron",
+    "vue3",
+    "vite",
+    "windows",
+    "shadowsocks",
+    "ss",
+    "clash",
+    "subscription",
+    "订阅"
+  ],
+  "scripts": {
+    "dev": "vite build && electron .",
+    "build": "vite build",
+    "start": "electron .",
+    "dist": "vite build && electron-builder --win portable",
+    "dist:installer": "vite build && electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "vite": "^6.0.7"
+  }
+}

@@ -1,0 +1,35 @@
+appId: com.aurora.vpn
+productName: AuroraVPN
+copyright: © 2026 Aurora Labs
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**
+  - electron/**
+  - build/icon.png
+  - package.json
+
+asar: true
+
+win:
+  icon: build/icon.png
+  signAndEditExecutable: true
+  target:
+    - target: portable
+      arch:
+        - x64
+
+portable:
+  artifactName: ${productName}-${version}-portable.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  createDesktopShortcut: true
+
+electronDownload:
+  mirror: https://npmmirror.com/mirrors/electron/

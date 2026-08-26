@@ -1,0 +1,16 @@
+// 天气图标（SVG 字符串），供 TitleBar / 其他页面共用
+export const wxSvg = {
+  sunny: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><circle cx="12" cy="12" r="4.4" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  cloudy: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><circle cx="8.5" cy="8" r="3.6" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 2.6v1.4M4.4 4.4l1 1M12.6 4.4l-1 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M9.5 18.5a4 4 0 1 1 .55-7.96A4.6 4.6 0 0 1 18.3 11.4 3.6 3.6 0 0 1 17.7 18.5H9.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  overcast: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M6.5 19a4.2 4.2 0 1 1 .6-8.36 5 5 0 0 1 9.5 1.5A3.7 3.7 0 0 1 16 19H6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 21h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  fog: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M6.5 11.5a4 4 0 1 1 .55-7.96A4.6 4.6 0 0 1 16.5 5.9 3.4 3.4 0 0 1 16 12.5H6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 15h14M4 18.2h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  drizzle: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M6.5 10.5a4 4 0 1 1 .55-7.96A4.6 4.6 0 0 1 16.5 4.9 3.4 3.4 0 0 1 16 11.5H6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.5 15.5l-.8 2M13.5 15.5l-.8 2M17 15.5l-.8 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  rain: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M6.5 10.5a4 4 0 1 1 .55-7.96A4.6 4.6 0 0 1 16.5 4.9 3.4 3.4 0 0 1 16 11.5H6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 15.5l-1 2.4M12 15.5l-1 2.4M16 15.5l-1 2.4M9 19.5l-.8 1.8M13 19.5l-.8 1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  snow: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M6.5 10.5a4 4 0 1 1 .55-7.96A4.6 4.6 0 0 1 16.5 4.9 3.4 3.4 0 0 1 16 11.5H6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 15.5l1.8 3M12.4 15.5l1.8 3M16.3 15.5l1.8 3M14.2 18.5h-6M10.3 17l-1 1.5M14.2 17l-1 1.5M12.4 18.5l-.3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  storm: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M6.5 11.5a4 4 0 1 1 .55-7.96A4.6 4.6 0 0 1 16.5 5.9 3.4 3.4 0 0 1 16 12.5H6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 14.5l-2.4 3.6h3l-1.4 3 4-4.4h-2.8l2-3.2H11z" fill="currentColor" stroke="none"/></svg>',
+  off: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 2.4"/><path d="M6.5 6.5l11 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+};
+
+export function weatherIcon(icon) {
+  return wxSvg[icon] || wxSvg.off;
+}
