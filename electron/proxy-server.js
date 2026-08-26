@@ -1,7 +1,7 @@
 // 本地转发代理服务器（真实可用的 HTTP/HTTPS 转发代理）
 // - 普通 HTTP 请求：转发到目标服务器（直连或经 SS 隧道）
 // - CONNECT 隧道（HTTPS/WebSocket）：建立 TCP 隧道并双向转发（直连或经 SS 隧道）
-// - 连接了 SS 节点后，流量通过所选节点加密转发（真正实现代理翻墙）
+// - 连接了 SS 节点后，流量通过所选节点加密转发（实现真实的网络代理转发）
 // - 统计真实流量，回传给核心引擎
 const http = require('http');
 const net = require('net');

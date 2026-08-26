@@ -21,7 +21,7 @@ AuroraVPN 是一款界面精致、交互流畅的桌面代理客户端（VPN Cli
 - 平台支持：Windows 10 / 11（x64）
 - 发行形态：单文件便携版（无需安装）、NSIS 安装版
 
-> 关键词 / Keywords：Windows 代理客户端 · VPN Client · 网络代理 Proxy · 订阅导入 Subscription · Shadowsocks (SS) · Clash 订阅解析 · 系统代理 System Proxy · 实时流量监控 Traffic Monitor · 加密隧道 · 科学上网工具 · Electron · Vue 3 · Vite · JavaScript · Node.js · 桌面应用
+> 关键词 / Keywords：Windows 代理客户端 · VPN Client · 网络代理 Proxy · 订阅导入 Subscription · Shadowsocks (SS) · Clash 订阅解析 · 系统代理 System Proxy · 实时流量监控 Traffic Monitor · 加密隧道 · 网络代理工具 · Electron · Vue 3 · Vite · JavaScript · Node.js · 桌面应用
 
 ## 目录
 
@@ -33,6 +33,7 @@ AuroraVPN 是一款界面精致、交互流畅的桌面代理客户端（VPN Cli
 - [快速开始](#快速开始)
 - [从源码构建](#从源码构建)
 - [使用说明](#使用说明)
+- [操作手册](#操作手册)
 - [协议支持说明](#协议支持说明)
 - [常见问题](#常见问题)
 - [软件更新](#软件更新)
@@ -197,6 +198,15 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 - 主题：深色（紫青科技风）/ 浅色（央视红金白）双主题，在「设置」中切换
 - 托盘：关闭窗口默认最小化到托盘，可在设置中关闭
 - 订阅批次：每次导入自动生成一个批次，支持整批删除；重新导入同一订阅会刷新配置而不破坏已有批次
+
+## 操作手册
+
+便携版安装包位置：`release/AuroraVPN-1.0.0-portable.exe`（单文件，双击即用，无需安装；被安全软件提示时选择"更多信息 → 仍要运行"）。
+
+为不同用户准备了详细的操作手册（HTML 版，浏览器打开即可阅读）：
+
+- [小白版操作手册](docs/manuals/小白版操作手册.html)：面向零基础用户，从"安装包在哪、怎么启动"到"导入订阅、一键连接、常见问题"的图文步骤
+- [程序员版操作手册](docs/manuals/程序员版操作手册.html)：面向开发者，覆盖从源码运行、目录结构、二次开发到打包发布的全流程
 
 ## 协议支持说明
 

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuroraVPN 小白版操作手册 · 新手入门</title>
+<style>
+  :root{
+    --bg:#f5f2ec; --panel:#ffffff; --ink:#1f1b16; --ink2:#5a5346; --ink3:#8c8372;
+    --red:#c8102e; --gold:#c9a227; --red-soft:#fdf1f2; --gold-soft:#fbf6e8;
+    --line:#e6dfd2; --ok:#1a7f37; --warn:#b45309;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(900px 380px at 12% -8%, rgba(200,16,46,.07), transparent 60%),
+      radial-gradient(800px 380px at 92% 4%, rgba(201,162,39,.09), transparent 58%),
+      var(--bg);
+    color:var(--ink);
+    font:15px/1.85 "Microsoft YaHei","PingFang SC","Noto Sans CJK SC",system-ui,sans-serif;
+    padding:40px 18px 80px;
+  }
+  .wrap{max-width:880px; margin:0 auto;}
+  .cover{
+    background:linear-gradient(135deg,#c8102e 0%,#d64a3a 48%,#c9a227 100%);
+    color:#fff; border-radius:18px; padding:44px 40px 38px; position:relative; overflow:hidden;
+    box-shadow:0 18px 44px rgba(200,16,46,.22);
+  }
+  .cover::after{content:""; position:absolute; right:-70px; top:-70px; width:230px; height:230px;
+    border:26px solid rgba(255,255,255,.10); border-radius:50%;}
+  .cover .kicker{font-size:13px; letter-spacing:4px; opacity:.9; margin-bottom:10px; font-weight:600;}
+  .cover h1{font-size:32px; line-height:1.3; font-weight:800; margin-bottom:10px;}
+  .cover p{font-size:15px; opacity:.95; max-width:640px;}
+  .cover .badges{margin-top:18px; display:flex; flex-wrap:wrap; gap:8px;}
+  .cover .badge{background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35);
+    padding:4px 12px; border-radius:999px; font-size:12.5px;}
+  .toc{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px 24px; margin:22px 0; box-shadow:0 4px 16px rgba(0,0,0,.04);}
+  .toc b{color:var(--red); display:block; margin-bottom:8px; font-size:14px;}
+  .toc a{color:var(--ink2); text-decoration:none; display:inline-block; margin:2px 14px 2px 0; font-size:14px;}
+  .toc a:hover{color:var(--red);}
+  section{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:24px 26px 22px; margin:18px 0; box-shadow:0 4px 16px rgba(0,0,0,.04);}
+  section h2{font-size:19px; color:var(--red); margin-bottom:4px; display:flex; align-items:center; gap:10px;}
+  section h2 .no{background:var(--red); color:#fff; width:26px; height:26px; border-radius:8px;
+    display:inline-flex; align-items:center; justify-content:center; font-size:14px; flex:none;}
+  section .sub{color:var(--ink3); font-size:13px; margin-bottom:14px; border-bottom:1px dashed var(--line); padding-bottom:12px;}
+  p{margin:8px 0;}
+  ul,ol{margin:8px 0 8px 24px;}
+  li{margin:6px 0;}
+  b{color:var(--red);}
+  code{background:var(--red-soft); color:var(--red); border:1px solid #f2c6cb; padding:1px 7px;
+    border-radius:6px; font:13px Consolas,"Courier New",monospace;}
+  .step{display:flex; gap:12px; margin:14px 0; align-items:flex-start;}
+  .step .num{flex:none; width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#c8102e,#d64a3a);
+    color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:14px; margin-top:2px;}
+  .step .body{flex:1;}
+  .step .body .t{font-weight:700; margin-bottom:2px;}
+  .callout{border-radius:10px; padding:12px 16px; margin:12px 0; font-size:14px;}
+  .callout.info{background:var(--gold-soft); border:1px solid #ecd9a8;}
+  .callout.info b{color:var(--gold);}
+  .callout.warn{background:var(--red-soft); border:1px solid #f2c6cb;}
+  .callout.warn b{color:var(--red);}
+  .table{width:100%; border-collapse:collapse; margin:12px 0; font-size:14px;}
+  .table th,.table td{border:1px solid var(--line); padding:8px 12px; text-align:left;}
+  .table th{background:var(--red-soft); color:var(--red); font-weight:700;}
+  .table tr:nth-child(even) td{background:#fdfbf7;}
+  .faq{border-bottom:1px dashed var(--line); padding:10px 0;}
+  .faq:last-child{border-bottom:none;}
+  .faq .q{font-weight:700; color:var(--ink); margin-bottom:2px;}
+  .faq .q::before{content:"Q "; color:var(--red); font-weight:800;}
+  .footer{margin-top:26px; text-align:center; color:var(--ink3); font-size:13px;}
+  .footer .tag{display:inline-block; border:1px solid var(--line); background:var(--panel);
+    padding:3px 12px; border-radius:999px; margin:0 4px 6px;}
+  @media print{
+    body{padding:0; background:#fff;}
+    .cover{box-shadow:none;}
+    section{box-shadow:none; break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="cover">
+    <div class="kicker">新手入门 · 零基础也能会</div>
+    <h1>AuroraVPN 小白版操作手册</h1>
+    <p>从拿到安装包到成功连接，按下面的步骤一步步来就行。全程只用鼠标点击，不需要任何编程知识。</p>
+    <div class="badges">
+      <span class="badge">免安装 · 双击即用</span>
+      <span class="badge">Windows 10 / 11</span>
+      <span class="badge">约 74MB</span>
+      <span class="badge">绿色便携版</span>
+    </div>
+  </div>
+
+  <div class="toc">
+    <b>本手册目录</b>
+    <a href="#s1">1 这是什么软件</a>
+    <a href="#s2">2 安装包在哪里</a>
+    <a href="#s3">3 怎么启动</a>
+    <a href="#s4">4 认识界面</a>
+    <a href="#s5">5 准备订阅链接</a>
+    <a href="#s6">6 导入订阅</a>
+    <a href="#s7">7 选择节点</a>
+    <a href="#s8">8 一键连接</a>
+    <a href="#s9">9 断开与退出</a>
+    <a href="#s10">10 常见问题</a>
+  </div>
+
+  <section id="s1">
+    <h2><span class="no">1</span> 这是什么软件</h2>
+    <div class="sub">一句话了解它</div>
+    <p>AuroraVPN 是一个运行在 Windows 电脑上的<b>网络代理客户端</b>。它的作用是：把你从服务商那里拿到的"订阅链接"导入进来，变成一个个可以选择的<b>节点</b>，然后<b>一键连接</b>、随时切换。</p>
+    <p>它最方便的地方是<b>不用安装</b>——整个软件只有一个文件，双击就能用，不往系统里装任何东西，也不用注册账号。</p>
+    <div class="callout info"><b>说明：</b>软件本身不包含任何内置节点，节点全部来自你自己导入的订阅链接。请仅将本工具用于合法、正当的用途。</div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="no">2</span> 安装包在哪里</h2>
+    <div class="sub">先找到这个 exe 文件</div>
+    <p>你要找的文件叫 <code>AuroraVPN-1.0.0-portable.exe</code>，大约 74MB。它通常出现在以下几个位置之一：</p>
+    <div class="table">
+      <table>
+        <tr><th>来源</th><th>位置 / 说明</th></tr>
+        <tr><td>本机开发目录</td><td><code>e:\存档\Ai\vpn\release\AuroraVPN-1.0.0-portable.exe</code></td></tr>
+        <tr><td>作者发布的下载</td><td>从作者提供的下载链接、网盘或聊天文件里下载，文件名相同</td></tr>
+        <tr><td>GitHub Releases</td><td>仓库 Releases 页面下载 <code>portable.exe</code> 附件（发布后可用）</td></tr>
+      </table>
+    </div>
+    <div class="callout warn"><b>注意：</b>"portable" 结尾就是绿色便携版，免安装；如果你拿到的是 <code>Setup</code> 结尾的，那是安装版，双击后按向导点"下一步"即可。新手推荐用 portable 版。</div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="no">3</span> 怎么启动（就是双击）</h2>
+    <div class="sub">安装这一步对绿色版来说，就是"双击打开"</div>
+    <div class="step"><div class="num">1</div><div class="body"><div class="t">双击 exe 文件</div>首次启动会先自解压，稍等几秒钟，然后自动弹出软件主界面。</div></div>
+    <div class="step"><div class="num">2</div><div class="body"><div class="t">遇到"已保护你的电脑"提示</div>点 <b>更多信息</b> → <b>仍要运行</b>（因为软件没有购买数字签名证书，Windows 会提醒）。</div></div>
+    <div class="step"><div class="num">3</div><div class="body"><div class="t">被安全软件拦截</div>把它加入信任 / 白名单后重新打开。</div></div>
+    <div class="step"><div class="num">4</div><div class="body"><div class="t">启动后的"隐藏"</div>右上角点关闭，其实是<b>最小化到右下角托盘</b>（时间旁边的小图标），软件还在后台运行，不会退出。</div></div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="no">4</span> 认识一下界面</h2>
+    <div class="sub">只要认识这几个地方就够用了</div>
+    <div class="table">
+      <table>
+        <tr><th>位置</th><th>作用</th></tr>
+        <tr><td>左侧菜单</td><td>总览 / 服务器 / 连接 / 日志 / 设置 / 关于，点一下切换页面</td></tr>
+        <tr><td>顶部信息栏</td><td>显示日期、天气和当前连接状态</td></tr>
+        <tr><td>总览页（仪表盘）</td><td>中间是雷达装饰，右边是<b>立即连接</b>大按钮，下面实时显示上传下载速度</td></tr>
+        <tr><td>服务器页</td><td>导入订阅、查看和选择节点都在这</td></tr>
+        <tr><td>设置页</td><td>切换主题（深色 / 浅色）、改端口、托盘开关</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="no">5</span> 准备订阅链接</h2>
+    <div class="sub">这是唯一的"准备工作"</div>
+    <p><b>订阅链接</b>是一串以 <code>http://</code> 或 <code>https://</code> 开头的网址，由你的节点服务商提供，通常在服务商的用户中心、会员页面或购买后发给你的消息里。</p>
+    <p>找到它以后，<b>把整串链接复制下来</b>（选中后按 <code>Ctrl+C</code>）。</p>
+    <div class="callout info"><b>提示：</b>如果你还没有订阅链接，可以先用服务商提供的"试用 / 测试"链接练手，流程完全一样。</div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="no">6</span> 导入订阅</h2>
+    <div class="sub">把链接变成节点列表</div>
+    <div class="step"><div class="num">1</div><div class="body"><div class="t">打开"服务器"页</div>点击左侧菜单的<b>服务器</b>。</div></div>
+    <div class="step"><div class="num">2</div><div class="body"><div class="t">点击"导入订阅"</div>在页面右上角找到 <b>导入订阅</b> 按钮。</div></div>
+    <div class="step"><div class="num">3</div><div class="body"><div class="t">粘贴链接并导入</div>把刚才复制的链接粘贴进去，点<b>导入</b>。成功后窗口会自动关闭，节点出现在列表里，卡片带紫色"订阅"标签。</div></div>
+    <p>每次导入会生成一个独立的<b>批次</b>，之前导入的批次会保留在下面，互不影响。不需要的批次可以一键删除。</p>
+  </section>
+
+  <section id="s7">
+    <h2><span class="no">7</span> 选择节点</h2>
+    <div class="sub">挑一个你想要的</div>
+    <p>在节点列表里，<b>点一下</b>你想用的节点卡片即可选中（选中的卡片会高亮变紫）。想比一比哪个快，选中后点<b>测延迟</b>，数值越小通常越快。</p>
+    <div class="callout info"><b>提示：</b>如果某个节点显示"需重新导入"，说明是旧数据缺少加密配置，回到第 6 步重新导入一次订阅就会刷新。</div>
+  </section>
+
+  <section id="s8">
+    <h2><span class="no">8</span> 一键连接</h2>
+    <div class="sub">成功就靠这一步</div>
+    <div class="step"><div class="num">1</div><div class="body"><div class="t">回到"总览"页</div>点左侧菜单的<b>总览</b>。</div></div>
+    <div class="step"><div class="num">2</div><div class="body"><div class="t">点"立即连接"</div>按中间的大按钮，等待雷达核心亮起、按钮变成红色"断开连接"，顶部状态显示<b>安全连接已建立</b>，就是成功了。</div></div>
+    <div class="step"><div class="num">3</div><div class="body"><div class="t">系统代理自动开启</div>连接成功后浏览器等软件会自动走代理访问，不需要你做任何额外设置。</div></div>
+    <div class="callout warn"><b>注意：</b>如果一直卡在"正在建立安全通道"后失败，通常是节点不可用，换一个节点重试，或检查你的网络是否正常。</div>
+  </section>
+
+  <section id="s9">
+    <h2><span class="no">9</span> 断开与退出</h2>
+    <div class="sub">用完怎么关</div>
+    <ul>
+      <li><b>断开连接</b>：回到总览页，点红色的"断开连接"按钮，系统代理会自动关闭。</li>
+      <li><b>不退出、只是最小化</b>：点窗口右上角关闭按钮，软件会藏到右下角托盘继续运行。</li>
+      <li><b>彻底退出</b>：右键右下角托盘图标 → 点"退出"；或在"设置"里关闭"最小化到托盘"，之后点关闭按钮就会真正退出。</li>
+    </ul>
+  </section>
+
+  <section id="s10">
+    <h2><span class="no">10</span> 常见问题</h2>
+    <div class="sub">遇到问题先看这里</div>
+    <div class="faq"><div class="q">连接成功但网页打不开？</div>确认<b>系统代理已开启</b>（连接后会自动开），且浏览器没有安装其它代理插件，否则两个会互相冲突。</div>
+    <div class="faq"><div class="q">导入订阅失败？</div>检查链接是否以 <code>http://</code> 或 <code>https://</code> 开头，以及当前网络能否访问该链接（换个网络重试）。</div>
+    <div class="faq"><div class="q">节点显示"需重新导入"？</div>旧版本导入的数据缺少加密配置，重新导入一次订阅即可自动刷新。</div>
+    <div class="faq"><div class="q">改完端口没生效？</div>修改端口后需要先断开，再重新连接。</div>
+    <div class="faq"><div class="q">软件提示有新版本？</div>按提示去下载页下载新版 exe 即可，覆盖使用。</div>
+  </section>
+
+  <div class="footer">
+    <span class="tag">仅供学习与技术交流</span>
+    <span class="tag">请遵守当地法律法规</span>
+    <p style="margin-top:8px;">AuroraVPN · 小白版操作手册 · 如有疑问请联系作者</p>
+  </div>
+
+</div>
+</body>
+</html>

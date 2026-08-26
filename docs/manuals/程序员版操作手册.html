@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuroraVPN 程序员版操作手册 · 开发部署指南</title>
+<style>
+  :root{
+    --bg:#f5f2ec; --panel:#ffffff; --ink:#1f1b16; --ink2:#5a5346; --ink3:#8c8372;
+    --red:#c8102e; --gold:#c9a227; --red-soft:#fdf1f2; --gold-soft:#fbf6e8;
+    --line:#e6dfd2; --ok:#1a7f37; --warn:#b45309;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(900px 380px at 12% -8%, rgba(200,16,46,.07), transparent 60%),
+      radial-gradient(800px 380px at 92% 4%, rgba(201,162,39,.09), transparent 58%),
+      var(--bg);
+    color:var(--ink);
+    font:15px/1.85 "Microsoft YaHei","PingFang SC","Noto Sans CJK SC",system-ui,sans-serif;
+    padding:40px 18px 80px;
+  }
+  .wrap{max-width:920px; margin:0 auto;}
+  .cover{
+    background:linear-gradient(135deg,#1f1b16 0%,#3a2f1f 55%,#7a5a15 100%);
+    color:#fff; border-radius:18px; padding:44px 40px 38px; position:relative; overflow:hidden;
+    box-shadow:0 18px 44px rgba(0,0,0,.28);
+  }
+  .cover::after{content:""; position:absolute; right:-70px; top:-70px; width:230px; height:230px;
+    border:26px solid rgba(201,162,39,.12); border-radius:50%;}
+  .cover .kicker{font-size:13px; letter-spacing:4px; opacity:.85; margin-bottom:10px; font-weight:600; color:#e8c86a;}
+  .cover h1{font-size:32px; line-height:1.3; font-weight:800; margin-bottom:10px;}
+  .cover p{font-size:15px; opacity:.92; max-width:680px;}
+  .cover .badges{margin-top:18px; display:flex; flex-wrap:wrap; gap:8px;}
+  .cover .badge{background:rgba(255,255,255,.10); border:1px solid rgba(232,200,106,.4);
+    padding:4px 12px; border-radius:999px; font-size:12.5px;}
+  .toc{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px 24px; margin:22px 0; box-shadow:0 4px 16px rgba(0,0,0,.04);}
+  .toc b{color:var(--red); display:block; margin-bottom:8px; font-size:14px;}
+  .toc a{color:var(--ink2); text-decoration:none; display:inline-block; margin:2px 14px 2px 0; font-size:14px;}
+  .toc a:hover{color:var(--red);}
+  section{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:24px 26px 22px; margin:18px 0; box-shadow:0 4px 16px rgba(0,0,0,.04);}
+  section h2{font-size:19px; color:var(--red); margin-bottom:4px; display:flex; align-items:center; gap:10px;}
+  section h2 .no{background:var(--red); color:#fff; width:26px; height:26px; border-radius:8px;
+    display:inline-flex; align-items:center; justify-content:center; font-size:14px; flex:none;}
+  section .sub{color:var(--ink3); font-size:13px; margin-bottom:14px; border-bottom:1px dashed var(--line); padding-bottom:12px;}
+  p{margin:8px 0;}
+  ul,ol{margin:8px 0 8px 24px;}
+  li{margin:6px 0;}
+  b{color:var(--red);}
+  code{background:var(--red-soft); color:var(--red); border:1px solid #f2c6cb; padding:1px 7px;
+    border-radius:6px; font:13px Consolas,"Courier New",monospace;}
+  pre{background:#1f1b16; color:#f0e6cf; border-radius:10px; padding:14px 16px; margin:12px 0;
+    font:13px/1.7 Consolas,"Courier New",monospace; overflow-x:auto;}
+  pre .c{color:#8a8274;}
+  .callout{border-radius:10px; padding:12px 16px; margin:12px 0; font-size:14px;}
+  .callout.info{background:var(--gold-soft); border:1px solid #ecd9a8;}
+  .callout.info b{color:var(--gold);}
+  .callout.warn{background:var(--red-soft); border:1px solid #f2c6cb;}
+  .callout.warn b{color:var(--red);}
+  .table{width:100%; border-collapse:collapse; margin:12px 0; font-size:14px;}
+  .table th,.table td{border:1px solid var(--line); padding:8px 12px; text-align:left; vertical-align:top;}
+  .table th{background:var(--red-soft); color:var(--red); font-weight:700;}
+  .table tr:nth-child(even) td{background:#fdfbf7;}
+  .file{font-family:Consolas,monospace; font-size:13px; padding:2px 8px; background:#f6f3ec;
+    border:1px solid var(--line); border-radius:6px; white-space:nowrap;}
+  .footer{margin-top:26px; text-align:center; color:var(--ink3); font-size:13px;}
+  .footer .tag{display:inline-block; border:1px solid var(--line); background:var(--panel);
+    padding:3px 12px; border-radius:999px; margin:0 4px 6px;}
+  @media print{
+    body{padding:0; background:#fff;}
+    .cover{box-shadow:none;}
+    section{box-shadow:none; break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="cover">
+    <div class="kicker">开发者文档 · 从源码到发布</div>
+    <h1>AuroraVPN 程序员版操作手册</h1>
+    <p>面向开发者的安装、构建、二次开发与发布部署指南。技术栈：Electron 33 + Vue 3 + Vite 6 + Node.js。</p>
+    <div class="badges">
+      <span class="badge">Electron 33</span>
+      <span class="badge">Vue 3 · Vite 6</span>
+      <span class="badge">Node.js 18+</span>
+      <span class="badge">纯 Node 代理内核</span>
+    </div>
+  </div>
+
+  <div class="toc">
+    <b>本手册目录</b>
+    <a href="#s1">1 项目概览</a>
+    <a href="#s2">2 获取发行版</a>
+    <a href="#s3">3 从源码运行</a>
+    <a href="#s4">4 目录结构</a>
+    <a href="#s5">5 核心配置</a>
+    <a href="#s6">6 协议支持</a>
+    <a href="#s7">7 二次开发要点</a>
+    <a href="#s8">8 打包发布</a>
+    <a href="#s9">9 调试与验证</a>
+    <a href="#s10">10 常见问题</a>
+  </div>
+
+  <section id="s1">
+    <h2><span class="no">1</span> 项目概览</h2>
+    <div class="sub">先搞清楚整体结构</div>
+    <p>AuroraVPN 采用 Electron 主进程 / 渲染进程分离架构。渲染层（Vue 3）通过 <code>preload</code> 暴露的 <code>contextBridge</code> 与主进程进行 IPC 通信；代理能力由主进程内的纯 Node.js 正向代理模块实现，<b>不依赖任何第三方代理内核</b>。</p>
+    <div class="table">
+      <table>
+        <tr><th>分层</th><th>技术</th><th>职责</th></tr>
+        <tr><td>渲染层</td><td>Vue 3 + Vite</td><td>六个页面：总览 / 服务器 / 连接 / 日志 / 设置 / 关于</td></tr>
+        <tr><td>桥接层</td><td>preload</td><td>contextBridge 暴露受限 API（<code>window.aurora.*</code>）</td></tr>
+        <tr><td>主进程</td><td>Electron + Node.js</td><td>状态机、正向代理、SS 加密客户端、系统代理、订阅解析、天气、设置持久化</td></tr>
+        <tr><td>网络层</td><td>HTTP / HTTPS</td><td>本地监听 <code>127.0.0.1:7891</code>，接管系统代理流量</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="no">2</span> 获取发行版</h2>
+    <div class="sub">安装包在哪里、有哪些形态</div>
+    <div class="table">
+      <table>
+        <tr><th>形态</th><th>文件</th><th>说明</th></tr>
+        <tr><td>便携版</td><td><code>release/AuroraVPN-1.0.0-portable.exe</code></td><td>单文件绿色版，双击即用，无需安装，推荐</td></tr>
+        <tr><td>安装版</td><td><code>release/AuroraVPN Setup 1.0.0.exe</code></td><td>NSIS 安装向导，可选开始菜单 / 桌面快捷方式</td></tr>
+        <tr><td>更新源</td><td>GitHub Releases</td><td>软件内版本检查基于 Releases 的 latest tag</td></tr>
+      </table>
+    </div>
+    <p>本机开发目录中，便携版位于 <code>e:\存档\Ai\vpn\release\</code>。若需重新生成，见<a href="#s8">打包发布</a>章节。</p>
+  </section>
+
+  <section id="s3">
+    <h2><span class="no">3</span> 从源码运行</h2>
+    <div class="sub">环境与常用命令</div>
+    <p>环境要求：Windows 10 / 11（x64）、Node.js 18+ 与 npm。</p>
+<pre>npm install                        <span class="c"># 安装依赖</span>
+npm run dev                        <span class="c"># 开发模式：构建渲染层并启动应用</span>
+npm run build                      <span class="c"># 仅构建渲染层（输出到 dist/）</span>
+npm run start                      <span class="c"># 直接启动（跳过构建）</span>
+npm run dist                       <span class="c"># 打包单文件便携版（自动先 vite build）</span>
+npm run dist:installer             <span class="c"># 打包 NSIS 安装版</span></pre>
+    <p>国内环境如遇 Electron 下载缓慢，可在项目根目录新建 <code>.npmrc</code>：</p>
+<pre>electron_mirror=https://npmmirror.com/mirrors/electron/</pre>
+  </section>
+
+  <section id="s4">
+    <h2><span class="no">4</span> 目录结构</h2>
+    <div class="sub">主进程模块职责一览</div>
+    <div class="table">
+      <table>
+        <tr><th>文件 / 目录</th><th>职责</th></tr>
+        <tr><td><span class="file">electron/main.js</span></td><td>入口：窗口、托盘、IPC、GitHub 更新检查</td></tr>
+        <tr><td><span class="file">electron/preload.js</span></td><td>contextBridge 安全桥接</td></tr>
+        <tr><td><span class="file">electron/core.js</span></td><td>连接状态机、真实流量统计、运行时日志</td></tr>
+        <tr><td><span class="file">electron/proxy-server.js</span></td><td>HTTP / HTTPS 正向代理服务器</td></tr>
+        <tr><td><span class="file">electron/ss-client.js</span></td><td>Shadowsocks 加密 / 解密客户端（真实转发）</td></tr>
+        <tr><td><span class="file">electron/system-proxy.js</span></td><td>Windows 注册表配置 / 恢复系统代理</td></tr>
+        <tr><td><span class="file">electron/servers.js</span></td><td>节点数据、订阅合并、增删、批次管理</td></tr>
+        <tr><td><span class="file">electron/subscription.js</span></td><td>订阅抓取与多协议解析（含 Clash YAML）</td></tr>
+        <tr><td><span class="file">electron/weather.js</span></td><td>基于 IP 定位的天气服务（含降级策略）</td></tr>
+        <tr><td><span class="file">electron/settings-store.js</span></td><td>基于 JSON 文件的设置持久化</td></tr>
+        <tr><td><span class="file">src/</span></td><td>Vue 3 渲染层：pages / components / styles / utils / store</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2><span class="no">5</span> 核心配置</h2>
+    <div class="sub">运行参数与行为开关</div>
+    <ul>
+      <li><b>代理端口</b>：默认 <code>7891</code>，可在「设置」中修改，重连后生效。</li>
+      <li><b>系统代理</b>：连接时写入注册表，断开时自动恢复。</li>
+      <li><b>主题</b>：深色（紫青科技风）/ 浅色（央视红金白），由 <code>src/styles/main.css</code> 的 CSS 变量驱动，全局自适应。</li>
+      <li><b>订阅批次</b>：每次导入独立成批，可整批删除；旧节点自动归入「历史导入」；重复导入同一订阅只刷新配置不破坏批次。</li>
+      <li><b>更新检查</b>：启动后延时约 3 秒自动检查 +「关于」页手动检查，基于 GitHub Releases。</li>
+    </ul>
+  </section>
+
+  <section id="s6">
+    <h2><span class="no">6</span> 协议支持</h2>
+    <div class="sub">解析与直连的范围</div>
+    <div class="table">
+      <table>
+        <tr><th>能力</th><th>范围</th></tr>
+        <tr><td>订阅解析</td><td>vmess / vless / ss / ssr / trojan / hysteria2 / tuic / wireguard / Clash YAML</td></tr>
+        <tr><td>真实连接</td><td>完整支持 Shadowsocks（SS）加密隧道转发</td></tr>
+        <tr><td>其它协议</td><td>仅可导入与管理，连接时提示「暂不支持直连」</td></tr>
+      </table>
+    </div>
+    <p>SS 客户端已处理 TCP 分包导致的解密 nonce 错位问题，兼容大流量 HTTPS 页面（如大型网站）加载。</p>
+  </section>
+
+  <section id="s7">
+    <h2><span class="no">7</span> 二次开发要点</h2>
+    <div class="sub">常用改动入口</div>
+    <ul>
+      <li><b>渲染层调用主进程</b>：通过 <code>window.aurora.*</code>（IPC），新增能力需在 <code>main.js</code> 注册 <code>ipcMain.handle</code> 并在 <code>preload.js</code> 暴露。</li>
+      <li><b>设计系统</b>：改配色在 <code>src/styles/main.css</code>（<code>:root</code> 与 <code>[data-theme='light']</code> 两组变量）。</li>
+      <li><b>新增页面</b>：在 <code>src/pages/</code> 建组件，并在 <code>Sidebar.vue</code> 的 <code>navs</code> 数组注册。</li>
+      <li><b>代理逻辑</b>：入口 <code>electron/proxy-server.js</code>，SS 加解密在 <code>electron/ss-client.js</code>。</li>
+      <li><b>订阅解析</b>：新增协议解析逻辑集中在 <code>electron/subscription.js</code>。</li>
+    </ul>
+  </section>
+
+  <section id="s8">
+    <h2><span class="no">8</span> 打包发布</h2>
+    <div class="sub">从版本号到用户可下载</div>
+    <div class="step" style="display:flex; gap:12px; margin:14px 0; align-items:flex-start;">
+      <div class="no" style="background:var(--red); color:#fff; width:26px; height:26px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:14px; flex:none; margin-top:2px;">1</div>
+      <div class="body" style="flex:1;"><b>改版本号</b>：更新 <code>package.json</code> 的 <code>version</code> 字段。</div>
+    </div>
+    <div class="step" style="display:flex; gap:12px; margin:14px 0; align-items:flex-start;">
+      <div class="no" style="background:var(--red); color:#fff; width:26px; height:26px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:14px; flex:none; margin-top:2px;">2</div>
+      <div class="body" style="flex:1;"><b>打包</b>：<code>npm run dist</code> 生成 <code>portable.exe</code>；<code>npm run dist:installer</code> 生成安装版。</div>
+    </div>
+    <div class="step" style="display:flex; gap:12px; margin:14px 0; align-items:flex-start;">
+      <div class="no" style="background:var(--red); color:#fff; width:26px; height:26px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:14px; flex:none; margin-top:2px;">3</div>
+      <div class="body" style="flex:1;"><b>创建 Release</b>：在 GitHub 仓库 Releases 新建，tag 填 <code>v1.0.1</code>（带 <code>v</code> 前缀、与 version 数字一致），上传 <code>.exe</code> 附件。</div>
+    </div>
+    <div class="step" style="display:flex; gap:12px; margin:14px 0; align-items:flex-start;">
+      <div class="no" style="background:var(--red); color:#fff; width:26px; height:26px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:14px; flex:none; margin-top:2px;">4</div>
+      <div class="body" style="flex:1;"><b>配置更新仓库</b>：在 <code>main.js</code> 顶部设置 <code>UPDATE_OWNER</code> / <code>UPDATE_REPO</code>，未配置时更新检查自动停用。</div>
+    </div>
+    <div class="callout warn"><b>注意：</b>便携版不支持 electron-updater 静默升级，采用"版本检查 + 手动下载"方案，发布后用户下次启动 / 手动检查即可收到提示。</div>
+  </section>
+
+  <section id="s9">
+    <h2><span class="no">9</span> 调试与验证</h2>
+    <div class="sub">日志、冒烟测试与排错</div>
+    <ul>
+      <li><b>日志</b>：应用内「日志」页可查看启动、连接、代理事件；主进程日志走 <code>console</code>。</li>
+      <li><b>冒烟测试</b>：设置环境变量 <code>AURORA_SMOKE=1</code> 启动，应用会自动"连接 → 观察 → 断开 → 退出"，用于验证真实隧道与速率统计。</li>
+      <li><b>端口占用</b>：启动失败先检查 <code>7891</code> 是否被占用，<code>Get-Process | Where-Object { $_.ProcessName -like '*Aurora*' } | Stop-Process -Force</code> 清理残留进程。</li>
+      <li><b>系统代理残留</b>：异常退出后若代理未恢复，手动到 Windows 设置 → 网络 → 代理，关闭手动代理即可。</li>
+    </ul>
+  </section>
+
+  <section id="s10">
+    <h2><span class="no">10</span> 常见问题</h2>
+    <div class="sub">开发与部署中常见的坑</div>
+    <div class="faq" style="border-bottom:1px dashed var(--line); padding:10px 0;"><div class="q" style="font-weight:700;"><span style="color:var(--red); font-weight:800;">Q </span>打包出的 exe 被 Windows 提示风险？</div>软件未购买代码签名证书，属正常现象。可引导用户点"更多信息 → 仍要运行"，或将 exe 加入信任。</div>
+    <div class="faq" style="border-bottom:1px dashed var(--line); padding:10px 0;"><div class="q" style="font-weight:700;"><span style="color:var(--red); font-weight:800;">Q </span>SS 节点连上但大网页加载失败？</div>通常是加解密 nonce 错位（TCP 分包），本仓库 <code>ss-client.js</code> 已处理；若改过该文件请回归验证。</div>
+    <div class="faq" style="border-bottom:1px dashed var(--line); padding:10px 0;"><div class="q" style="font-weight:700;"><span style="color:var(--red); font-weight:800;">Q </span>更新检查不生效？</div>确认 <code>main.js</code> 的 <code>UPDATE_OWNER</code> / <code>UPDATE_REPO</code> 已配置且 GitHub 有对应 Release。</div>
+    <div class="faq" style="padding:10px 0;"><div class="q" style="font-weight:700;"><span style="color:var(--red); font-weight:800;">Q </span>如何在双平台同步？</div>本仓库配置了 <code>origin</code>（GitHub）与 <code>gitee</code> 两个远程，推送时分别 <code>git push origin main</code> 与 <code>git push gitee main</code>。</div>
+  </section>
+
+  <div class="footer">
+    <span class="tag">仅供学习与技术交流</span>
+    <span class="tag">请遵守当地法律法规</span>
+    <p style="margin-top:8px;">AuroraVPN · 程序员版操作手册 · 版本 v1.0.0</p>
+  </div>
+
+</div>
+</body>
+</html>
