@@ -64,7 +64,7 @@
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
         </span>
         <span v-else>
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"><path d="M12 3v9m0 0l-4-4m4 4l4-4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"><path d="M12 22v-5M9 8V2M15 8V2M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
         <span class="sb-connect-label">
           {{ state.state === 'connected' ? '断开连接' : state.state === 'connecting' || state.state === 'disconnecting' ? '处理中…' : '一键连接' }}
