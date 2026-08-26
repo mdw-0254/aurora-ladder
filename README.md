@@ -1,10 +1,10 @@
-<!-- 发布到 GitHub / Gitee 后，请把顶部「仓库地址」相关的链接替换为你自己的仓库地址 -->
-
 <div align="center">
 
 # AuroraVPN 极光代理客户端
 
 **AuroraVPN · A sleek Windows proxy / VPN client built with Electron + Vue 3 + Vite**
+
+简约精致的 Windows 代理客户端：订阅导入 · 多协议解析 · Shadowsocks 加密隧道 · 系统代理 · 实时流量监控 · 双主题
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue.svg)
@@ -15,13 +15,13 @@
 
 </div>
 
-简约而精致的 Windows 代理客户端（VPN Client），基于 Electron + Vue 3 + Vite 构建。支持订阅导入、多节点选择、系统代理、实时流量监控、连接会话管理与双主题切换。代理内核由主进程内的纯 Node.js 正向代理模块实现，零第三方代理内核依赖，单文件绿色便携，开箱即用。
+AuroraVPN 是一款界面精致、交互流畅的桌面代理客户端（VPN Client / Proxy Client），基于 Electron + Vue 3 + Vite 构建，运行于 Windows 10 / 11。支持订阅导入、多节点选择、系统代理、实时流量监控、连接会话管理与深色 / 浅色双主题切换。代理内核由主进程内的纯 Node.js 正向代理模块实现，零第三方代理内核依赖，单文件绿色便携，开箱即用。
 
 - 技术栈：Electron 33 · Vue 3 · Vite 6 · Node.js
 - 平台支持：Windows 10 / 11（x64）
 - 发行形态：单文件便携版（无需安装）、NSIS 安装版
 
-> 关键词 / Keywords：Windows 代理客户端 · VPN Client · 订阅导入 Subscription · Shadowsocks (SS) · Clash 订阅解析 · 系统代理 System Proxy · 实时流量监控 Traffic Monitor · Electron · Vue 3 · Vite
+> 关键词 / Keywords：Windows 代理客户端 · VPN Client · 网络代理 Proxy · 订阅导入 Subscription · Shadowsocks (SS) · Clash 订阅解析 · 系统代理 System Proxy · 实时流量监控 Traffic Monitor · 加密隧道 · 科学上网工具 · Electron · Vue 3 · Vite · JavaScript · Node.js · 桌面应用
 
 ## 目录
 
@@ -35,6 +35,8 @@
 - [使用说明](#使用说明)
 - [协议支持说明](#协议支持说明)
 - [常见问题](#常见问题)
+- [软件更新](#软件更新)
+- [参与贡献](#参与贡献)
 - [作者与联系方式](#作者与联系方式)
 - [支持与打赏](#支持与打赏)
 - [免责声明](#免责声明)
@@ -44,35 +46,35 @@
 
 AuroraVPN 是一个界面精致、交互流畅的桌面代理客户端，适合需要"轻量、好看、够用"的代理工具的普通用户，也适合想学习 Electron + Vue 3 桌面应用开发的开发者参考。
 
-它参考了主流代理客户端（如 Clash 系）的交互范式，用更轻的技术实现：不依赖任何外部代理内核，由主进程内的正向代理模块直接接管 HTTP/HTTPS 流量，并通过 Windows 注册表自动切换系统代理，实现"一键连接、全局生效"。
+它参考了主流代理客户端（如 Clash 系）的交互范式，用更轻的技术实现：不依赖任何外部代理内核，由主进程内的正向代理模块直接接管 HTTP / HTTPS 流量，并通过 Windows 注册表自动切换系统代理，实现"一键连接、全局生效"。加密隧道转发基于 Shadowsocks 协议实现，具备真实、可用的代理能力。
 
 ## 功能特性
 
-- 订阅导入：粘贴订阅链接一键导入节点，自动识别国家/地区并归档
-- 多协议解析：支持解析 vmess / vless / ss / ssr / trojan / hysteria2 / tuic / wireguard / Clash YAML 订阅
-- 批次管理：每次导入独立成批，支持一键删除整批节点，旧节点自动归入「历史导入」
-- 一键连接 / 断开，支持系统代理自动开关
-- 实时流量监控：上传 / 下载速度、累计流量、今日用量、运行时长、实时速度曲线
-- 连接会话管理：实时查看当前活跃的代理连接
-- 完整日志系统：记录启动、连接、代理等事件
-- 顶部信息栏：自动显示日期、城市天气与连接状态
-- 深色 / 浅色双主题：紫青科技风深色 + 央视红金白浅色，全局设计系统统一，雷达、速率、图表、按钮均随主题自适应配色
-- 原生 Windows 托盘：关闭最小化到托盘，后台常驻
-- 版本更新：启动后自动检查 + 「关于」页手动检查，基于 GitHub Releases 比对版本号，一键跳转下载
-- 纯 Node.js HTTP/HTTPS 正向代理，无第三方代理内核依赖
-- 单文件绿色便携版，双击即用，无需安装
+- **订阅导入**：粘贴订阅链接一键导入节点，自动识别国家 / 地区并归档
+- **多协议解析**：支持解析 vmess / vless / ss / ssr / trojan / hysteria2 / tuic / wireguard / Clash YAML 订阅
+- **批次管理**：每次导入独立成批，支持一键删除整批节点，旧节点自动归入「历史导入」
+- **一键连接 / 断开**，支持系统代理自动开关
+- **实时流量监控**：上传 / 下载速度、累计流量、今日用量、运行时长、实时速度曲线
+- **连接会话管理**：实时查看当前活跃的代理连接
+- **完整日志系统**：记录启动、连接、代理等事件
+- **顶部信息栏**：自动显示日期、城市天气与连接状态
+- **深色 / 浅色双主题**：紫青科技风深色 + 央视红金白浅色，全局设计系统统一，雷达、速率、图表、按钮均随主题自适应配色
+- **原生 Windows 托盘**：关闭最小化到托盘，后台常驻
+- **版本更新**：启动后自动检查 + 「关于」页手动检查，基于 GitHub Releases 比对版本号，一键跳转下载
+- **纯 Node.js HTTP / HTTPS 正向代理**，无第三方代理内核依赖
+- **单文件绿色便携版**，双击即用，无需安装
 
 ## 界面预览
 
 > 以下截图为深色主题；浅色主题（央视红金白）在「设置 → 外观 → 主题」中切换查看。
 
-![仪表盘](docs/screenshots/dashboard.png)
+![仪表盘 / Dashboard](docs/screenshots/dashboard.png)
 
-![服务器节点](docs/screenshots/servers.png)
+![服务器节点 / Servers](docs/screenshots/servers.png)
 
-![订阅导入](docs/screenshots/subscription.png)
+![订阅导入 / Subscription](docs/screenshots/subscription.png)
 
-![关于与打赏](docs/screenshots/about.png)
+![关于与打赏 / About](docs/screenshots/about.png)
 
 ## 技术架构
 
@@ -112,7 +114,7 @@ AuroraVPN 是一个界面精致、交互流畅的桌面代理客户端，适合�
 - `electron/preload.js`：contextBridge 安全桥接，向渲染层暴露受限 API
 - `electron/core.js`：连接状态机、真实流量统计、运行时日志
 - `electron/proxy-server.js`：HTTP / HTTPS 正向代理服务器，接管本地代理流量
-- `electron/ss-client.js`：Shadowsocks 加密/解密客户端，负责真实节点转发
+- `electron/ss-client.js`：Shadowsocks 加密 / 解密客户端，负责真实节点转发
 - `electron/system-proxy.js`：通过 Windows 注册表配置 / 恢复系统代理
 - `electron/servers.js`：节点数据、订阅节点合并 / 增删 / 批次管理
 - `electron/subscription.js`：订阅链接抓取与多协议解析（含 Clash YAML）
@@ -202,19 +204,6 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 - 真实连接（加密隧道转发）目前完整支持 Shadowsocks（SS）节点。
 - 其它协议的节点导入后仍可查看与管理，但连接时会提示「暂不支持直连」，请在后续版本中关注更新。
 
-## 软件更新
-
-软件启动后延时约 3 秒会自动检查一次更新，也可在「关于」页点击「检查更新」手动检查。检查逻辑通过 GitHub Releases 的 latest 版本号与当前版本号对比，发现新版本时弹出提示并可一键打开下载页。
-
-启用更新的前提是已把源码发布到 GitHub 并创建 Release。发布后需在 `electron/main.js` 顶部把占位符替换为你自己的仓库：
-
-```js
-const UPDATE_OWNER = '你的GitHub用户名';  // 例如 'gezhechao'
-const UPDATE_REPO = '你的仓库名';          // 例如 'AuroraVPN'
-```
-
-发布流程：本地修改版本号（`package.json` 的 `version` 字段）→ `npm run dist` 打包出 `.exe` → 在 GitHub 仓库「Releases」中新建 Release，tag 填 `v1.0.1`（带 `v` 前缀，数字与 `version` 对应），并上传 `.exe` 作为附件。用户下次启动或手动检查时即可收到更新提示。
-
 ## 常见问题
 
 - **无法访问网站**：确认已连接成功、系统代理已开启，且浏览器未使用其它代理插件。
@@ -222,13 +211,34 @@ const UPDATE_REPO = '你的仓库名';          // 例如 'AuroraVPN'
 - **节点显示「需重新导入」**：该节点为旧版本导入，缺少加密配置，请重新「导入订阅」刷新。
 - **更改端口后未生效**：修改端口后需先断开再重新连接。
 
+## 软件更新
+
+软件启动后延时约 3 秒会自动检查一次更新，也可在「关于」页点击「检查更新」手动检查。检查逻辑通过 GitHub Releases 的 latest 版本号与当前版本号对比，发现新版本时弹出提示并可一键打开下载页。
+
+启用更新的前提是已把源码发布到 GitHub 并创建 Release。发布后需在 `electron/main.js` 顶部把占位符替换为你自己的仓库：
+
+```js
+const UPDATE_OWNER = '你的GitHub用户名';  // 例如 'mdw-0254'
+const UPDATE_REPO = '你的仓库名';          // 例如 'aurora-vpn'
+```
+
+发布流程：本地修改版本号（`package.json` 的 `version` 字段）→ `npm run dist` 打包出 `.exe` → 在 GitHub 仓库「Releases」中新建 Release，tag 填 `v1.0.1`（带 `v` 前缀，数字与 `version` 对应），并上传 `.exe` 作为附件。用户下次启动或手动检查时即可收到更新提示。
+
+## 参与贡献
+
+欢迎贡献代码、提交 Issue、完善文档或反馈建议。请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解开发流程与代码规范，并遵守 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
+
+- 报告问题 / 建议：GitHub Issues
+- 提交代码：Fork → 新建分支 → 提交 → Pull Request
+- 发现安全漏洞：请参阅 [SECURITY.md](SECURITY.md)，勿在公开渠道直接披露
+
 ## 作者与联系方式
 
 作者：歌者超
 
 - 微信：`1016168805`
 
-欢迎交流、提 issue、Star，也欢迎一起完善功能。
+欢迎交流、提 Issue、Star，也欢迎一起完善功能。
 
 ## 支持与打赏
 
