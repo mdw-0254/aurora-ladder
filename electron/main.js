@@ -38,8 +38,8 @@ function main() {
   function createWindow() {
     const icon = getAppIcon();
     win = new BrowserWindow({
-      width: 1120,
-      height: 720,
+      width: 1021,
+      height: 620,
       minWidth: 960,
       minHeight: 620,
       frame: false,
