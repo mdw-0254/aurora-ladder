@@ -46,7 +46,7 @@
               <div class="hm-line">
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><path d="M12 13v-2m0 0l-1.5-1.5M12 11l1.5-1.5M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 10h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 <span class="hm-label">延迟</span>
-                <span class="hm-value mono" :style="currentPing >= 0 ? { color: pingColor(currentPing) } : {}">{{ currentPing >= 0 ? currentPing + 'ms' : '--' }}</span>
+                <span class="hm-value mono" :style="currentPing >= 0 ? { color: pingColor(currentPing) } : {}">{{ currentPing >= 0 ? currentPing + ' ms' : '--' }}</span>
               </div>
             </div>
             <div class="hm-line flow">
@@ -300,7 +300,7 @@ onMounted(async () => {
 .hero-server { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .hs-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .rc-name { font-size: 15px; font-weight: 700; letter-spacing: -0.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rc-ip { font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.rc-ip { font-size: 11.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 
 .hero-radar { flex: none; position: relative; z-index: 1; animation: radar-pop 0.7s cubic-bezier(0.22, 1.4, 0.36, 1) 0.14s both; }
 
@@ -328,8 +328,8 @@ onMounted(async () => {
 .hm-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--panel-border-2); flex: none; }
 .hm-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .hm-line.flow { padding-top: 5px; border-top: 1px dashed var(--panel-border); }
-.hm-line svg { color: var(--text-3); flex: none; }
-.hm-label { font-size: 10.5px; color: var(--text-3); font-weight: 600; letter-spacing: 0.3px; flex: none; }
+.hm-line svg { color: var(--text-2); flex: none; }
+.hm-label { font-size: 10.5px; color: var(--text-2); font-weight: 600; letter-spacing: 0.3px; flex: none; }
 .hm-value { margin-left: auto; min-width: 42px; text-align: right; font-size: 13px; font-weight: 700; color: var(--text-1); letter-spacing: 0.2px; font-variant-numeric: tabular-nums; }
 
 @keyframes slide-in-l {
@@ -350,7 +350,7 @@ onMounted(async () => {
 .dash-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; align-items: stretch; }
 .panel-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 15px 20px 0; }
 .panel-title { font-size: 15px; font-weight: 700; letter-spacing: -0.1px; }
-.panel-sub { font-size: 11.5px; color: var(--text-3); margin-top: 3px; }
+.panel-sub { font-size: 11.5px; color: var(--text-2); margin-top: 3px; }
 .legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); }
 .lg { display: flex; align-items: center; gap: 6px; }
 .lg-dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
@@ -359,7 +359,7 @@ onMounted(async () => {
 .chart-body { flex: 1; padding: 12px 16px 4px; min-height: 150px; }
 .chart-now { display: flex; align-items: center; gap: 20px; padding: 10px 20px 16px; border-top: 1px dashed var(--panel-border); margin-top: auto; }
 .cn-item { display: flex; align-items: center; gap: 8px; }
-.cn-label { font-size: 12px; color: var(--text-3); }
+.cn-label { font-size: 12px; color: var(--text-2); }
 .cn-num { font-size: 17px; font-weight: 700; letter-spacing: 0.2px; }
 .cn-divider { width: 1px; height: 22px; background: var(--panel-border); }
 
@@ -398,9 +398,9 @@ onMounted(async () => {
   margin-bottom: 6px;
 }
 .b-num { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
-.b-cap { font-size: 11px; color: var(--text-3); }
+.b-cap { font-size: 11px; color: var(--text-2); }
 .today-line { margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px dashed var(--panel-border); }
-.today-label { font-size: 12px; color: var(--text-3); font-weight: 600; }
+.today-label { font-size: 12px; color: var(--text-2); font-weight: 600; }
 .today-val { font-size: 12.5px; font-weight: 600; }
 
 /* 推荐节点 */
@@ -409,8 +409,9 @@ onMounted(async () => {
 .rec-item {
   display: flex; flex-direction: column; gap: 6px;
   padding: 16px;
-  border-radius: 12px; border: 1px solid var(--panel-border);
-  background: var(--panel); cursor: pointer; text-align: left;
+  border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.11), rgba(148, 163, 184, 0.045));
+  cursor: pointer; text-align: left;
   transition: all 0.2s; position: relative; overflow: hidden;
 }
 .rec-item:hover {
@@ -418,11 +419,18 @@ onMounted(async () => {
   border-color: var(--panel-border-2);
   box-shadow: var(--shadow-1);
 }
-.rec-item.sel { border-color: rgba(124, 108, 240, 0.5); background: var(--accent-grad-soft); }
+.rec-item.sel {
+  border-color: rgba(139, 92, 246, 0.62);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(124, 108, 240, 0.32));
+  box-shadow: inset 0 0 26px rgba(108, 92, 246, 0.16), 0 0 18px rgba(124, 108, 240, 0.16);
+}
+.rec-item.sel .rec-name,
+.rec-item.sel .rec-ping,
+.rec-item.sel .rec-meta { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.42); }
 .rec-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .rec-ping { font-size: 13px; font-weight: 700; letter-spacing: 0.3px; }
-.rec-name { font-weight: 700; font-size: 14px; letter-spacing: -0.1px; }
-.rec-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-3); }
+.rec-name { font-weight: 700; font-size: 14px; letter-spacing: -0.1px; color: #c6d2e4; }
+.rec-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-2); }
 .rec-cur { margin-left: 6px; }
 .rec-empty { padding: 30px 20px; text-align: center; color: var(--text-3); font-size: 13px; }
 
@@ -449,6 +457,9 @@ onMounted(async () => {
   border-color: var(--panel-border);
 }
 :root[data-theme='light'] .hero-meta::before { background: linear-gradient(90deg, transparent, rgba(200, 16, 46, 0.4), rgba(201, 162, 39, 0.4), transparent); }
+:root[data-theme='light'] .rec-item { border-color: var(--panel-border); background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.62)); }
+:root[data-theme='light'] .rec-name { color: var(--text-1); }
 :root[data-theme='light'] .rec-item.sel { border-color: rgba(200, 16, 46, 0.4); }
-:root[data-theme='light'] .hm-line svg { color: var(--text-3); }
+:root[data-theme='light'] .hm-line svg { color: var(--text-2); }
+:root[data-theme='light'] .hm-label { color: var(--text-2); }
 </style>

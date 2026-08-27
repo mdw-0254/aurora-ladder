@@ -10,6 +10,7 @@ files:
   - dist/**
   - electron/**
   - build/icon.png
+  - build/icon-connected.png
   - package.json
 
 asar: true

@@ -212,7 +212,7 @@ async function toggle() {
   display: flex; flex-direction: column; gap: 9px;
 }
 .sb-status { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); font-weight: 600; }
-.sb-meta { font-size: 11px; color: var(--text-3); padding-left: 15px; letter-spacing: 0.3px; }
+.sb-meta { font-size: 12px; color: var(--text-2); padding-left: 15px; letter-spacing: 0.3px; }
 .sb-connect {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   margin-top: 4px; padding: 12px;

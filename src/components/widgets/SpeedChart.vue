@@ -288,12 +288,12 @@ onBeforeUnmount(() => {
 .empty-muted {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  color: var(--text-3); font-size: 12.5px; letter-spacing: 0.3px;
+  color: var(--text-2); font-size: 12.5px; letter-spacing: 0.3px;
 }
 .idle-hint {
   position: absolute; left: 14px; bottom: 8px;
   display: flex; align-items: center; gap: 6px;
-  font-size: 10.5px; color: var(--text-3); letter-spacing: 0.3px;
+  font-size: 10.5px; color: var(--text-2); letter-spacing: 0.3px;
   opacity: 0.9; pointer-events: none;
 }
 .idle-dot {

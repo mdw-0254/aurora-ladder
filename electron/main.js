@@ -38,10 +38,10 @@ function main() {
   function createWindow() {
     const icon = getAppIcon();
     win = new BrowserWindow({
-      width: 1021,
-      height: 620,
+      width: 1022,
+      height: 600,
       minWidth: 960,
-      minHeight: 620,
+      minHeight: 560,
       frame: false,
       show: false,
       backgroundColor: '#0a0e17',
@@ -76,8 +76,9 @@ function main() {
     win.on('closed', () => { win = null; });
   }
 
-  function getAppIcon() {
-    const p = path.join(__dirname, '..', 'build', 'icon.png');
+  function getAppIcon(connected) {
+    const file = connected ? 'icon-connected.png' : 'icon.png';
+    const p = path.join(__dirname, '..', 'build', file);
     try {
       const img = nativeImage.createFromPath(p);
       if (!img.isEmpty()) return img;
@@ -85,9 +86,29 @@ function main() {
     return nativeImage.createEmpty();
   }
 
+  // 连接状态变化时切换托盘小图标（已连接为绿色变体）
+  function setTrayIcon(connected) {
+    if (!tray) return;
+    const icon = getAppIcon(connected);
+    if (!icon.isEmpty()) tray.setImage(icon.resize({ width: 16, height: 16 }));
+  }
+
+  // 连接状态变化时同步切换主窗口任务栏图标（尽力同步，Windows 可能缓存）
+  function setWindowIcon(connected) {
+    if (!win || win.isDestroyed()) return;
+    const icon = getAppIcon(connected);
+    if (!icon.isEmpty()) win.setIcon(icon);
+  }
+
+  // 统一同步托盘 + 任务栏图标
+  function syncIcons(connected) {
+    setTrayIcon(connected);
+    setWindowIcon(connected);
+  }
+
   // ---------- 托盘 ----------
   function createTray() {
-    const icon = getAppIcon();
+    const icon = getAppIcon(core.state === 'connected');
     if (icon.isEmpty()) return;
     tray = new Tray(icon.resize({ width: 16, height: 16 }));
     tray.setToolTip('Aurora');
@@ -102,6 +123,7 @@ function main() {
   function rebuildTrayMenu() {
     if (!tray) return;
     const connected = core.state === 'connected';
+    syncIcons(connected);
     const menu = Menu.buildFromTemplate([
       { label: 'Aurora', enabled: false },
       { type: 'separator' },
@@ -219,6 +241,10 @@ function main() {
 
   core.emit = (channel, payload) => {
     broadcast(channel, payload);
+    // 任何连接状态变化都同步切换托盘 + 任务栏小图标
+    if (channel === 'stateUpdate' && payload && payload.state) {
+      syncIcons(payload.state === 'connected');
+    }
   };
 
   ipcMain.handle('app:getState', () => core.snapshot());
