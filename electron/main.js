@@ -90,7 +90,7 @@ function main() {
     const icon = getAppIcon();
     if (icon.isEmpty()) return;
     tray = new Tray(icon.resize({ width: 16, height: 16 }));
-    tray.setToolTip('Aurora VPN');
+    tray.setToolTip('Aurora');
     rebuildTrayMenu();
     tray.on('click', () => {
       if (win) {
@@ -103,7 +103,7 @@ function main() {
     if (!tray) return;
     const connected = core.state === 'connected';
     const menu = Menu.buildFromTemplate([
-      { label: 'Aurora VPN', enabled: false },
+      { label: 'Aurora', enabled: false },
       { type: 'separator' },
       {
         label: connected ? '断开连接' : '连接',
@@ -150,7 +150,7 @@ function main() {
         port,
         method: 'GET',
         path: 'http://api.ipify.org/',
-        headers: { Host: 'api.ipify.org', 'User-Agent': 'AuroraVPN/1.0', Connection: 'close' },
+        headers: { Host: 'api.ipify.org', 'User-Agent': 'Aurora/1.0', Connection: 'close' },
         timeout: 12000
       },
       (res) => {
@@ -328,7 +328,7 @@ function main() {
     const timer = setTimeout(() => ctrl.abort(), 8000);
     try {
       const res = await fetch(url, {
-        headers: { 'User-Agent': 'AuroraVPN', Accept: 'application/vnd.github+json' },
+        headers: { 'User-Agent': 'Aurora', Accept: 'application/vnd.github+json' },
         signal: ctrl.signal
       });
       clearTimeout(timer);
@@ -372,11 +372,11 @@ function main() {
   });
 
   app.whenReady().then(() => {
-    app.setAppUserModelId('com.aurora.vpn');
+    app.setAppUserModelId('com.aurora.app');
     app.setLoginItemSettings({ openAtLogin: settings.get('launchOnBoot') });
     createWindow();
     createTray();
-    core.info('Aurora VPN 已启动  v' + app.getVersion());
+    core.info('Aurora 已启动  v' + app.getVersion());
     core.info('本地代理端口 ' + settings.get('port') + '，等待连接');
 
     if (settings.get('autoConnect')) {

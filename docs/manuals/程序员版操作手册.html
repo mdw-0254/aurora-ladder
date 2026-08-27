@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AuroraVPN 程序员版操作手册 · 开发部署指南</title>
+<title>Aurora 程序员版操作手册 · 开发部署指南</title>
 <style>
   :root{
     --bg:#f5f2ec; --panel:#ffffff; --ink:#1f1b16; --ink2:#5a5346; --ink3:#8c8372;
@@ -80,7 +80,7 @@
 
   <div class="cover">
     <div class="kicker">开发者文档 · 从源码到发布</div>
-    <h1>AuroraVPN 程序员版操作手册</h1>
+    <h1>Aurora 程序员版操作手册</h1>
     <p>面向开发者的安装、构建、二次开发与发布部署指南。技术栈：Electron 33 + Vue 3 + Vite 6 + Node.js。</p>
     <div class="badges">
       <span class="badge">Electron 33</span>
@@ -107,7 +107,7 @@
   <section id="s1">
     <h2><span class="no">1</span> 项目概览</h2>
     <div class="sub">先搞清楚整体结构</div>
-    <p>AuroraVPN 采用 Electron 主进程 / 渲染进程分离架构。渲染层（Vue 3）通过 <code>preload</code> 暴露的 <code>contextBridge</code> 与主进程进行 IPC 通信；代理能力由主进程内的纯 Node.js 正向代理模块实现，<b>不依赖任何第三方代理内核</b>。</p>
+    <p>Aurora 采用 Electron 主进程 / 渲染进程分离架构。渲染层（Vue 3）通过 <code>preload</code> 暴露的 <code>contextBridge</code> 与主进程进行 IPC 通信；代理能力由主进程内的纯 Node.js 正向代理模块实现，<b>不依赖任何第三方代理内核</b>。</p>
     <div class="table">
       <table>
         <tr><th>分层</th><th>技术</th><th>职责</th></tr>
@@ -125,12 +125,12 @@
     <div class="table">
       <table>
         <tr><th>形态</th><th>文件</th><th>说明</th></tr>
-        <tr><td>便携版</td><td><code>release/AuroraVPN-1.0.0-portable.exe</code></td><td>单文件绿色版，双击即用，无需安装，推荐</td></tr>
-        <tr><td>安装版</td><td><code>release/AuroraVPN Setup 1.0.0.exe</code></td><td>NSIS 安装向导，可选开始菜单 / 桌面快捷方式</td></tr>
+        <tr><td>便携版</td><td><code>release/Aurora-1.0.0-portable.exe</code></td><td>单文件绿色版，双击即用，无需安装，推荐</td></tr>
+        <tr><td>安装版</td><td><code>release/Aurora Setup 1.0.0.exe</code></td><td>NSIS 安装向导，可选开始菜单 / 桌面快捷方式</td></tr>
         <tr><td>更新源</td><td>GitHub Releases</td><td>软件内版本检查基于 Releases 的 latest tag</td></tr>
       </table>
     </div>
-    <p>本机开发目录中，便携版位于 <code>e:\存档\Ai\vpn\release\</code>。若需重新生成，见<a href="#s8">打包发布</a>章节。</p>
+    <p>本机开发目录中，便携版位于 <code>项目目录\release\</code>。若需重新生成，见<a href="#s8">打包发布</a>章节。</p>
   </section>
 
   <section id="s3">
@@ -251,7 +251,7 @@ npm run dist:installer             <span class="c"># 打包 NSIS 安装版</span
   <div class="footer">
     <span class="tag">仅供学习与技术交流</span>
     <span class="tag">请遵守当地法律法规</span>
-    <p style="margin-top:8px;">AuroraVPN · 程序员版操作手册 · 版本 v1.0.0</p>
+    <p style="margin-top:8px;">Aurora · 程序员版操作手册 · 版本 v1.0.0</p>
   </div>
 
 </div>

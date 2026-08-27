@@ -1,5 +1,6 @@
 <template>
   <header class="titlebar">
+    <!-- 品牌区 · 与侧栏同宽（logo + 名称 + 徽章 + 版本 整合为一块） -->
     <div class="tb-left drag">
       <div class="logo">
         <svg viewBox="0 0 32 32" width="21" height="21" fill="none">
@@ -21,11 +22,12 @@
         </svg>
       </div>
       <span class="tb-title">Aurora</span>
-      <span class="tb-vpn">VPN</span>
+      <span class="tb-badge">极速</span>
       <span class="tb-version mono">v{{ store.version }}</span>
     </div>
 
-    <div class="tb-center">
+    <!-- 主内容区 · 左侧天气日期（与下方卡片对齐） / 右侧连接状态 -->
+    <div class="tb-main drag">
       <div class="tb-weather">
         <span class="wdate">{{ dateStr }}</span>
         <span class="wsep"></span>
@@ -33,6 +35,10 @@
         <span class="wtemp mono" v-if="weather && weather.ok">{{ weather.temp }}°</span>
         <span class="wmeta" v-if="weather">{{ weather.city }} · {{ weather.text }}</span>
         <span class="wmeta" v-else>天气加载中…</span>
+      </div>
+      <div class="tb-status" :class="statusClass">
+        <span class="tb-status-dot"></span>
+        <span class="tb-status-text">{{ statusText }}</span>
       </div>
     </div>
 
@@ -65,6 +71,21 @@ const dateStr = computed(() => {
   return `${d.getMonth() + 1}月${d.getDate()}日 星期${w[d.getDay()]}`;
 });
 
+/* 连接状态（安全通道信息已并入此状态，与标题栏整合） */
+const statusText = computed(() => {
+  const s = store.state.state;
+  if (s === 'connecting') return '正在建立安全通道…';
+  if (s === 'disconnecting') return '正在断开…';
+  if (s === 'connected') return '安全连接 · 已加密';
+  return '当前未连接';
+});
+const statusClass = computed(() => {
+  const s = store.state.state;
+  if (s === 'connected') return 'on';
+  if (s === 'connecting' || s === 'disconnecting') return 'busy';
+  return 'off';
+});
+
 onMounted(() => {
   loadWeather();
 });
@@ -76,7 +97,7 @@ onMounted(() => {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 0 6px 0 18px;
+  padding: 0 6px 0 0;
   border-bottom: 1px solid var(--panel-border);
   background: linear-gradient(180deg, color-mix(in srgb, var(--bg-2) 72%, transparent), color-mix(in srgb, var(--bg) 60%, transparent));
   backdrop-filter: blur(20px);
@@ -84,19 +105,30 @@ onMounted(() => {
   flex: none;
 }
 .drag { -webkit-app-region: drag; }
-.tb-left { display: flex; align-items: center; gap: 9px; flex: 1; -webkit-app-region: drag; }
-.logo { display: flex; align-items: center; margin-right: 2px; }
+
+/* 品牌区 · 与侧栏同宽，内容左缘与侧栏卡片对齐 */
+.tb-left {
+  flex: none;
+  width: 224px;               /* 与 Sidebar 等宽 */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;            /* 与侧栏内边距一致 */
+  min-width: 0;
+}
+.logo { display: flex; align-items: center; flex: none; }
 .logo svg { filter: drop-shadow(0 2px 8px var(--logo-shadow)); }
 .tb-title {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.3px;
+  white-space: nowrap;
   background: var(--tb-title-grad);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.tb-vpn {
+.tb-badge {
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 9.5px;
@@ -105,15 +137,33 @@ onMounted(() => {
   color: #fff;
   background: var(--accent-grad);
   box-shadow: 0 2px 10px rgba(108, 92, 246, 0.4);
+  flex: none;
 }
-.tb-version { font-size: 11px; color: var(--text-3); margin-left: 4px; }
+.tb-version {
+  font-size: 10.5px;
+  color: var(--text-3);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  white-space: nowrap;
+}
 
-.tb-center { flex: none; display: flex; justify-content: center; min-width: 0; }
+/* 主内容区 · 与主内容同宽，天气左缘与下方卡片对齐，状态靠右 */
+.tb-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 26px;            /* 与 app-main 左内边距一致 → 与卡片对齐 */
+  align-self: stretch;
+}
 .tb-weather {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 0 6px;
   line-height: 1;
   white-space: nowrap;
 }
@@ -129,7 +179,29 @@ onMounted(() => {
 .wtemp { font-size: 20px; font-weight: 700; color: var(--text-1); letter-spacing: 0.3px; }
 .wmeta { font-size: 13px; color: var(--text-2); }
 
-.tb-right { flex: 1; display: flex; justify-content: flex-end; -webkit-app-region: no-drag; }
+/* 连接状态 · 无外边框 */
+.tb-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.tb-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.tb-status.on .tb-status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+.tb-status.busy .tb-status-dot { background: var(--warn); box-shadow: 0 0 10px var(--warn); animation: tb-pulse 1s infinite; }
+.tb-status.off .tb-status-dot { background: var(--text-3); box-shadow: 0 0 8px var(--text-3); }
+@keyframes tb-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.tb-right { flex: none; display: flex; justify-content: flex-end; -webkit-app-region: no-drag; }
 .wc {
   width: 44px;
   height: 46px;
@@ -151,7 +223,8 @@ onMounted(() => {
 :root[data-theme='light'] .titlebar {
   background: linear-gradient(180deg, rgba(237, 233, 225, 0.88), rgba(245, 242, 236, 0.72));
 }
-:root[data-theme='light'] .tb-vpn { box-shadow: 0 2px 10px rgba(200, 16, 46, 0.35); }
+:root[data-theme='light'] .tb-badge { box-shadow: 0 2px 10px rgba(200, 16, 46, 0.35); }
+:root[data-theme='light'] .tb-version { background: rgba(255, 255, 255, 0.6); border-color: var(--panel-border-2); }
 :root[data-theme='light'] .titlebar::after {
   content: '';
   position: absolute;

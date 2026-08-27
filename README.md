@@ -1,8 +1,8 @@
 <div align="center">
 
-# AuroraVPN 极光代理客户端
+# Aurora 极光代理客户端
 
-**AuroraVPN · A sleek Windows proxy / VPN client built with Electron + Vue 3 + Vite**
+**Aurora · A sleek Windows proxy client built with Electron + Vue 3 + Vite**
 
 简约精致的 Windows 代理客户端：订阅导入 · 多协议解析 · Shadowsocks 加密隧道 · 系统代理 · 实时流量监控 · 双主题
 
@@ -15,13 +15,13 @@
 
 </div>
 
-AuroraVPN 是一款界面精致、交互流畅的桌面代理客户端（VPN Client / Proxy Client），基于 Electron + Vue 3 + Vite 构建，运行于 Windows 10 / 11。支持订阅导入、多节点选择、系统代理、实时流量监控、连接会话管理与深色 / 浅色双主题切换。代理内核由主进程内的纯 Node.js 正向代理模块实现，零第三方代理内核依赖，单文件绿色便携，开箱即用。
+Aurora 是一款界面精致、交互流畅的桌面代理客户端（Proxy Client），基于 Electron + Vue 3 + Vite 构建，运行于 Windows 10 / 11。支持订阅导入、多节点选择、系统代理、实时流量监控、连接会话管理与深色 / 浅色双主题切换。代理内核由主进程内的纯 Node.js 正向代理模块实现，零第三方代理内核依赖，单文件绿色便携，开箱即用。
 
 - 技术栈：Electron 33 · Vue 3 · Vite 6 · Node.js
 - 平台支持：Windows 10 / 11（x64）
 - 发行形态：单文件便携版（无需安装）、NSIS 安装版
 
-> 关键词 / Keywords：Windows 代理客户端 · VPN Client · 网络代理 Proxy · 订阅导入 Subscription · Shadowsocks (SS) · Clash 订阅解析 · 系统代理 System Proxy · 实时流量监控 Traffic Monitor · 加密隧道 · 网络代理工具 · Electron · Vue 3 · Vite · JavaScript · Node.js · 桌面应用
+> 关键词 / Keywords：Windows 代理客户端 · 网络代理 Proxy · 订阅导入 Subscription · Shadowsocks (SS) · Clash 订阅解析 · 系统代理 System Proxy · 实时流量监控 Traffic Monitor · 加密隧道 · 网络代理工具 · Electron · Vue 3 · Vite · JavaScript · Node.js · 桌面应用
 
 ## 目录
 
@@ -45,7 +45,7 @@ AuroraVPN 是一款界面精致、交互流畅的桌面代理客户端（VPN Cli
 
 ## 项目介绍
 
-AuroraVPN 是一个界面精致、交互流畅的桌面代理客户端，适合需要"轻量、好看、够用"的代理工具的普通用户，也适合想学习 Electron + Vue 3 桌面应用开发的开发者参考。
+Aurora 是一个界面精致、交互流畅的桌面代理客户端，适合需要"轻量、好看、够用"的代理工具的普通用户，也适合想学习 Electron + Vue 3 桌面应用开发的开发者参考。
 
 它参考了主流代理客户端（如 Clash 系）的交互范式，用更轻的技术实现：不依赖任何外部代理内核，由主进程内的正向代理模块直接接管 HTTP / HTTPS 流量，并通过 Windows 注册表自动切换系统代理，实现"一键连接、全局生效"。加密隧道转发基于 Shadowsocks 协议实现，具备真实、可用的代理能力。
 
@@ -154,7 +154,7 @@ AuroraVPN 是一个界面精致、交互流畅的桌面代理客户端，适合�
 
 ### 直接使用发行版
 
-从 [Releases](releases) 下载 `AuroraVPN-1.0.0-portable.exe`，双击运行即可，无需安装。
+从 [Releases](releases) 下载 `Aurora-1.0.0-portable.exe`，双击运行即可，无需安装。
 
 1. 启动后进入左侧「节点」页，点击「导入订阅」粘贴订阅链接
 2. 导入成功后，点击任一节点卡片即可选中（可先做延迟测试）
@@ -201,7 +201,7 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 
 ## 操作手册
 
-便携版安装包位置：`release/AuroraVPN-1.0.0-portable.exe`（单文件，双击即用，无需安装；被安全软件提示时选择"更多信息 → 仍要运行"）。
+便携版安装包位置：`release/Aurora-1.0.0-portable.exe`（单文件，双击即用，无需安装；被安全软件提示时选择"更多信息 → 仍要运行"）。
 
 为不同用户准备了详细的操作手册（HTML 版，浏览器打开即可阅读）：
 
@@ -229,7 +229,7 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 
 ```js
 const UPDATE_OWNER = '你的GitHub用户名';  // 例如 'mdw-0254'
-const UPDATE_REPO = '你的仓库名';          // 例如 'aurora-vpn'
+const UPDATE_REPO = '你的仓库名';          // 例如 'aurora'
 ```
 
 发布流程：本地修改版本号（`package.json` 的 `version` 字段）→ `npm run dist` 打包出 `.exe` → 在 GitHub 仓库「Releases」中新建 Release，tag 填 `v1.0.1`（带 `v` 前缀，数字与 `version` 对应），并上传 `.exe` 作为附件。用户下次启动或手动检查时即可收到更新提示。

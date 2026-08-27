@@ -33,4 +33,4 @@
 - 移除所有"演示 / 模拟"相关文本，正式发布
 - 连接按钮图标改为插头样式，更直观体现"连接"含义
 
-[1.0.0]: https://github.com/mdw-0254/aurora-vpn/releases/tag/v1.0.0
+[1.0.0]: https://github.com/mdw-0254/aurora/releases/tag/v1.0.0

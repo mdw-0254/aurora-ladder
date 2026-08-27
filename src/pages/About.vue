@@ -2,10 +2,10 @@
   <div class="about">
     <div class="panel about-card">
       <div class="about-logo-wrap">
-        <img class="about-logo" :src="iconUrl" alt="Aurora VPN" />
+        <img class="about-logo" :src="iconUrl" alt="Aurora" />
         <div class="about-glow"></div>
       </div>
-      <div class="about-name">Aurora<span>VPN</span></div>
+      <div class="about-name">Aurora</div>
       <div class="about-version mono">v{{ store.version }} · {{ store.platform.platform }} {{ store.platform.arch }}</div>
       <button class="btn btn-ghost btn-sm about-update-btn" @click="checkForUpdates" :disabled="checking">
         <svg viewBox="0 0 24 24" width="14" height="14" :class="{ 'spin': checking }" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -182,18 +182,6 @@ async function copyVx() {
   filter: blur(6px); animation: pulse-dot 3.4s ease-in-out infinite;
 }
 .about-name { font-size: 27px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 5px; }
-.about-name span {
-  margin-left: 8px;
-  padding: 3px 10px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  vertical-align: middle;
-  color: #fff;
-  background: var(--accent-grad);
-  box-shadow: 0 4px 16px rgba(108, 92, 246, 0.45);
-}
 .about-version { font-size: 12.5px; color: var(--text-3); margin-bottom: 10px; }
 .about-update-btn { margin-bottom: 14px; gap: 6px; }
 .about-update-btn:disabled { opacity: 0.55; cursor: default; }

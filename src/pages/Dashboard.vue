@@ -10,13 +10,8 @@
       <!-- 入场流光扫掠 -->
       <span class="hero-sweep"></span>
 
-      <div class="hero-zone hero-left">
-        <div class="status-pill" :class="connected ? 'ok' : connecting ? 'busy' : 'off'">
-          <span class="pill-dot"></span>
-          <Transition name="pill-fade" mode="out-in">
-            <span :key="statusText">{{ statusText }}</span>
-          </Transition>
-        </div>
+      <!-- 左：节点信息 + 控制统计 整合成一块 -->
+      <div class="hero-left">
         <div class="hero-server">
           <span class="cc sm">{{ serverCode }}</span>
           <div class="hs-info">
@@ -24,20 +19,7 @@
             <div class="rc-ip mono">出口 IP · {{ store.state.externalIp }}</div>
           </div>
         </div>
-        <div class="hero-tag" :class="connected ? 'on' : connecting ? 'busy' : 'off'">
-          <i class="ht-dot"></i>{{ connected ? '安全通道 · 已加密' : connecting ? '安全通道 · 建立中' : '安全通道 · 待命' }}
-        </div>
-      </div>
 
-      <span class="hero-vr"></span>
-
-      <div class="hero-radar">
-        <RadarGlobe :connected="connected" :connecting="connecting" :size="180" />
-      </div>
-
-      <span class="hero-vr"></span>
-
-      <div class="hero-zone hero-right">
         <button class="btn hero-btn" :class="connected ? 'btn-danger' : 'btn-primary'" @click="toggleConnect" :disabled="connecting || disconnecting">
           <span v-if="connecting || disconnecting" class="spin-svg">
             <svg viewBox="0 0 24 24" width="15" height="15"><path d="M12 3a9 9 0 1 0 9 9" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
@@ -50,23 +32,33 @@
           </span>
           {{ connected ? '断开连接' : '立即连接' }}
         </button>
-        <div class="hero-meta">
-          <div class="hm-line">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <span class="hm-label">运行</span>
-            <span class="hm-value mono">{{ fmtDuration(state.runtime) }}</span>
+      </div>
+
+      <!-- 中：指标（独立于按钮，垂直居中） -->
+      <div class="hero-meta">
+            <div class="hm-row">
+              <div class="hm-line">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <span class="hm-label">运行</span>
+                <span class="hm-value mono">{{ fmtDuration(state.runtime) }}</span>
+              </div>
+              <span class="hm-dot"></span>
+              <div class="hm-line">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><path d="M12 13v-2m0 0l-1.5-1.5M12 11l1.5-1.5M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 10h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="hm-label">延迟</span>
+                <span class="hm-value mono" :style="currentPing >= 0 ? { color: pingColor(currentPing) } : {}">{{ currentPing >= 0 ? currentPing + 'ms' : '--' }}</span>
+              </div>
+            </div>
+            <div class="hm-line flow">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><path d="M3 17l6-6 4 4 8-8M15 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="hm-label">流量</span>
+              <span class="hm-value mono">{{ fmtBytes(state.todayDown + state.todayUp) }}</span>
+            </div>
           </div>
-          <div class="hm-line">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><path d="M12 13v-2m0 0l-1.5-1.5M12 11l1.5-1.5M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 10h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="hm-label">延迟</span>
-            <span class="hm-value mono" :style="currentPing >= 0 ? { color: pingColor(currentPing) } : {}">{{ currentPing >= 0 ? currentPing + 'ms' : '--' }}</span>
-          </div>
-          <div class="hm-line">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><path d="M3 17l6-6 4 4 8-8M15 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="hm-label">流量</span>
-            <span class="hm-value mono">{{ fmtBytes(state.todayDown + state.todayUp) }}</span>
-          </div>
-        </div>
+
+      <!-- 右：雷达动效 -->
+      <div class="hero-radar">
+        <RadarGlobe :connected="connected" :connecting="connecting" :size="138" />
       </div>
     </div>
 
@@ -194,13 +186,6 @@ const currentPing = computed(() => {
   return id ? (store.pings[id] ?? -1) : -1;
 });
 
-const statusText = computed(() => {
-  if (connecting.value) return '正在建立安全通道…';
-  if (disconnecting.value) return '正在断开…';
-  if (connected.value) return '安全连接已建立';
-  return '当前未连接';
-});
-
 const serverCode = computed(() => store.state.server?.code || '--');
 const serverName = computed(() => store.state.server?.name || '未选择节点');
 
@@ -251,14 +236,15 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.dash { display: flex; flex-direction: column; gap: 20px; max-width: 1080px; margin: 0 auto; }
+.dash { display: flex; flex-direction: column; gap: 16px; max-width: 1080px; margin: 0 auto; }
 
 /* 顶部 · 状态 + 雷达 + 连接控制 */
 .hero {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 14px 22px;
+  gap: 26px;
+  padding: 12px 24px;
+  min-height: 162px;
   position: relative; overflow: hidden;
   animation: hero-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -299,76 +285,52 @@ onMounted(async () => {
 @keyframes spin-slow { to { transform: rotate(360deg); } }
 .spin-svg { animation: spin-slow 1s linear infinite; display: flex; }
 
-.hero-zone {
+/* 左：节点信息 + 控制统计 整合块 */
+.hero-left {
+  flex: 0 0 240px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  min-width: 0;
-  flex: 1 1 0;
+  gap: 14px;
   position: relative;
   z-index: 1;
+  animation: slide-in-l 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
 }
-.hero-left { align-items: flex-start; animation: slide-in-l 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.hero-right { align-items: flex-end; animation: slide-in-r 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
 
-.status-pill {
-  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  min-width: 148px;
-  padding: 5px 13px; border-radius: 999px;
-  background: var(--panel); border: 1px solid var(--panel-border);
-  font-size: 12px; font-weight: 600; color: var(--text-2);
-  white-space: nowrap;
-}
-.pill-dot { width: 7px; height: 7px; border-radius: 50%; }
-.status-pill.ok .pill-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
-.status-pill.busy .pill-dot { background: var(--warn); box-shadow: 0 0 10px var(--warn); animation: pulse-dot 1s infinite; }
-.status-pill.off .pill-dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
-
-.hero-server { display: flex; align-items: center; gap: 10px; }
+.hero-server { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .hs-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .rc-name { font-size: 15px; font-weight: 700; letter-spacing: -0.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rc-ip { font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
-.hero-tag {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
-  color: var(--text-2);
-  margin-top: 1px;
-}
-.ht-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); flex: none; }
-.hero-tag.on .ht-dot { background: #22d3ee; box-shadow: 0 0 8px rgba(34, 211, 238, 0.9); animation: pulse-dot 2.6s ease-in-out infinite; }
-.hero-tag.busy .ht-dot { background: var(--warn); box-shadow: 0 0 8px var(--warn); animation: pulse-dot 1s infinite; }
-.hero-tag.off .ht-dot { background: var(--danger); box-shadow: 0 0 6px var(--danger); opacity: .85; }
-
-.hero-vr {
-  width: 1px;
-  align-self: stretch;
-  flex: none;
-  background: linear-gradient(180deg, transparent, var(--panel-border-2) 18%, var(--panel-border-2) 82%, transparent);
-  position: relative; z-index: 1;
-}
+.rc-ip { font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 
 .hero-radar { flex: none; position: relative; z-index: 1; animation: radar-pop 0.7s cubic-bezier(0.22, 1.4, 0.36, 1) 0.14s both; }
 
-.hero-btn { min-width: 130px; padding: 10px 16px; font-size: 13px; }
+.hero-btn { width: 100%; padding: 9px 16px; font-size: 13px; }
 .hero-meta {
-  width: 156px;
+  flex: 0 0 auto;
+  width: 240px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
   border: 1px solid var(--panel-border);
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
-  padding: 9px 12px;
-  display: flex; flex-direction: column; gap: 6px;
+  padding: 7px 14px;
   position: relative; overflow: hidden;
 }
 .hero-meta::before {
   content: '';
-  position: absolute; top: 0; left: 12px; right: 12px; height: 1px;
+  position: absolute; top: 0; left: 14px; right: 14px; height: 1px;
   background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.4), transparent);
 }
-.hm-line { display: flex; align-items: center; gap: 6px; }
+.hm-row { display: flex; align-items: center; gap: 12px; }
+.hm-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--panel-border-2); flex: none; }
+.hm-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.hm-line.flow { padding-top: 5px; border-top: 1px dashed var(--panel-border); }
 .hm-line svg { color: var(--text-3); flex: none; }
-.hm-label { font-size: 10.5px; color: var(--text-3); font-weight: 600; letter-spacing: 0.3px; }
-.hm-value { margin-left: auto; min-width: 46px; text-align: right; font-size: 13.5px; font-weight: 700; color: var(--text-1); letter-spacing: 0.2px; }
+.hm-label { font-size: 10.5px; color: var(--text-3); font-weight: 600; letter-spacing: 0.3px; flex: none; }
+.hm-value { margin-left: auto; min-width: 42px; text-align: right; font-size: 13px; font-weight: 700; color: var(--text-1); letter-spacing: 0.2px; font-variant-numeric: tabular-nums; }
 
 @keyframes slide-in-l {
   0% { opacity: 0; transform: translateX(-16px); }
@@ -378,9 +340,6 @@ onMounted(async () => {
   0% { opacity: 0; transform: translateX(16px); }
   100% { opacity: 1; transform: translateX(0); }
 }
-.pill-fade-enter-active, .pill-fade-leave-active { transition: opacity 0.16s ease, transform 0.16s ease; }
-.pill-fade-enter-from { opacity: 0; transform: translateY(4px); }
-.pill-fade-leave-to { opacity: 0; transform: translateY(-4px); }
 @keyframes radar-pop {
   0% { opacity: 0; transform: scale(0.45); filter: brightness(2.8) saturate(1.6); }
   50% { opacity: 1; transform: scale(1.1); filter: brightness(1.3) saturate(1.2); }
@@ -389,14 +348,14 @@ onMounted(async () => {
 
 /* 网格 */
 .dash-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; align-items: stretch; }
-.panel-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 17px 20px 0; }
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 15px 20px 0; }
 .panel-title { font-size: 15px; font-weight: 700; letter-spacing: -0.1px; }
 .panel-sub { font-size: 11.5px; color: var(--text-3); margin-top: 3px; }
 .legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); }
 .lg { display: flex; align-items: center; gap: 6px; }
 .lg-dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
 
-.chart-panel { min-height: 288px; display: flex; flex-direction: column; }
+.chart-panel { min-height: 262px; display: flex; flex-direction: column; }
 .chart-body { flex: 1; padding: 12px 16px 4px; min-height: 150px; }
 .chart-now { display: flex; align-items: center; gap: 20px; padding: 10px 20px 16px; border-top: 1px dashed var(--panel-border); margin-top: auto; }
 .cn-item { display: flex; align-items: center; gap: 8px; }
@@ -405,7 +364,7 @@ onMounted(async () => {
 .cn-divider { width: 1px; height: 22px; background: var(--panel-border); }
 
 /* 无空隙 bento 统计 */
-.stats-panel { min-height: 288px; display: flex; flex-direction: column; }
+.stats-panel { min-height: 262px; display: flex; flex-direction: column; }
 .bento {
   flex: 1;
   display: grid;
@@ -468,9 +427,8 @@ onMounted(async () => {
 .rec-empty { padding: 30px 20px; text-align: center; color: var(--text-3); font-size: 13px; }
 
 @media (max-width: 900px) {
-  .hero { padding: 14px 16px 16px; gap: 14px; flex-direction: column; }
-  .hero-vr { display: none; }
-  .hero-left, .hero-right { align-items: center; }
+  .hero { padding: 14px 16px 16px; gap: 16px; flex-direction: column; }
+  .hero-left { align-items: center; }
   .dash-grid { grid-template-columns: 1fr; }
   .rec-list { grid-template-columns: repeat(2, 1fr); }
 }
@@ -491,10 +449,6 @@ onMounted(async () => {
   border-color: var(--panel-border);
 }
 :root[data-theme='light'] .hero-meta::before { background: linear-gradient(90deg, transparent, rgba(200, 16, 46, 0.4), rgba(201, 162, 39, 0.4), transparent); }
-:root[data-theme='light'] .hero-tag.on .ht-dot { background: var(--accent-1); box-shadow: 0 0 8px rgba(200, 16, 46, 0.75); }
-/* 状态语义：在线=绿、连接中=金、待命=灰（不再误用红） */
-:root[data-theme='light'] .status-pill.off .pill-dot { background: var(--text-3); box-shadow: 0 0 8px rgba(140, 131, 114, 0.5); }
-:root[data-theme='light'] .hero-tag.off .ht-dot { background: var(--text-3); box-shadow: 0 0 6px rgba(140, 131, 114, 0.5); opacity: 1; }
 :root[data-theme='light'] .rec-item.sel { border-color: rgba(200, 16, 46, 0.4); }
-:root[data-theme='light'] .status-pill, :root[data-theme='light'] .hm-line svg { color: var(--text-3); }
+:root[data-theme='light'] .hm-line svg { color: var(--text-3); }
 </style>
