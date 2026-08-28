@@ -19,6 +19,13 @@ const UPDATE_CONFIGURED =
   UPDATE_OWNER && UPDATE_OWNER.indexOf('你的') === -1 &&
   UPDATE_REPO && UPDATE_REPO.indexOf('你的') === -1;
 
+// GitHub 下载加速镜像（国内网络直连 github.com 下载常被限制，按顺序自动回退；最后兜底直连）
+const GH_MIRRORS = [
+  'https://ghfast.top/',
+  'https://gh.ddlc.top/',
+  'https://gh-proxy.com/'
+];
+
 // 单实例锁
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -336,9 +343,10 @@ function main() {
     return checkUpdate();
   });
   // 一键静默更新：下载新安装包 → 替换旧包 → 自动重启
-  ipcMain.handle('app:updateApp', async (e, downloadUrl) => {
-    if (!/^https?:\/\//.test(String(downloadUrl || ''))) return { error: '无效的下载地址' };
-    return applyUpdate(String(downloadUrl));
+  ipcMain.handle('app:updateApp', async (e, payload) => {
+    const url = (payload && payload.downloadUrl) || '';
+    if (!/^https?:\/\//.test(String(url))) return { error: '无效的下载地址' };
+    return applyUpdate(String(url), (payload && payload.size) || 0);
   });
 
   // ---------- 版本检查 ----------
@@ -372,15 +380,36 @@ function main() {
       let downloadUrl = data.html_url || url;
       const exe = (data.assets || []).find((a) => /\.exe$/i.test(a && a.name));
       if (exe && exe.browser_download_url) downloadUrl = exe.browser_download_url;
-      return { hasUpdate: isNewer(latest, current), latest, current, downloadUrl };
+      return { hasUpdate: isNewer(latest, current), latest, current, downloadUrl, size: exe ? exe.size : 0 };
     } catch (e) {
       clearTimeout(timer);
       return { error: (e && e.message) || String(e) };
     }
   }
 
-  // 从 URL 下载安装包到本地文件（自动跟随跳转、带进度回调），返回下载文件路径
-  async function downloadFile(url, destPath, onProgress) {
+  // 从 URL 下载安装包到本地文件（多源镜像回退 + 完整性校验 + 进度回调），返回下载文件路径
+  async function downloadFile(url, destPath, onProgress, expectedSize) {
+    // 候选下载源：GitHub 链接先走国内加速镜像，最后兜底直连；其他链接直接下载
+    const sources = [];
+    if (/^https:\/\/(github\.com|objects\.githubusercontent\.com|release-assets\.githubusercontent\.com)\//i.test(url)) {
+      GH_MIRRORS.forEach((m) => sources.push(m + url));
+      sources.push(url);
+    } else {
+      sources.push(url);
+    }
+    let lastErr = null;
+    for (const src of sources) {
+      try {
+        return await downloadStream(src, destPath, onProgress, expectedSize);
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw new Error('网络无法连接更新服务器，请检查网络后重试' + (lastErr ? '（' + lastErr.message + '）' : ''));
+  }
+
+  // 从单个源流式下载到本地文件（失败时抛错交由外层回退下一个源）
+  async function downloadStream(url, destPath, onProgress, expectedSize) {
     const res = await fetch(url, { headers: { 'User-Agent': 'Aurora' } });
     if (!res.ok || !res.body) throw new Error('下载失败：HTTP ' + res.status);
     const total = parseInt(res.headers.get('content-length') || '0', 10);
@@ -395,11 +424,15 @@ function main() {
       if (!file.write(value)) await new Promise((r) => file.once('drain', r));
     }
     await new Promise((resolve, reject) => file.end((err) => (err ? reject(err) : resolve())));
+    // 完整性校验：已知预期大小且不一致时判为失败，触发回退
+    if (expectedSize > 0 && received !== expectedSize) {
+      throw new Error('下载文件不完整（' + received + '/' + expectedSize + '）');
+    }
     return destPath;
   }
 
   // 一键静默更新：下载新包 → 生成替换/重启脚本 → 退出应用（便携版自动替换；非便携版退回打开下载页）
-  function applyUpdate(downloadUrl) {
+  function applyUpdate(downloadUrl, expectedSize) {
     const portableExe = process.env.PORTABLE_EXECUTABLE_FILE;
     if (!portableExe) {
       // 开发模式 / 免安装目录运行时无法原地替换，退回打开下载页
@@ -416,7 +449,7 @@ function main() {
     const q = (s) => '"' + String(s).replace(/%/g, '%%') + '"';
 
     broadcast('updateProgress', { phase: 'download', percent: 0 });
-    downloadFile(downloadUrl, tmp, (percent) => broadcast('updateProgress', { phase: 'download', percent }))
+    downloadFile(downloadUrl, tmp, (percent) => broadcast('updateProgress', { phase: 'download', percent }), expectedSize)
       .then(async () => {
         broadcast('updateProgress', { phase: 'apply' });
         // 批处理：等本进程退出 → 替换安装包 → 启动新版 → 自删脚本
@@ -461,7 +494,7 @@ function main() {
     try { r = await checkUpdate(); } catch (e) { r = { error: String(e && e.message || e) }; }
     if (!r || r.error || !r.hasUpdate) return;
     // 通知渲染进程显示提醒；若用户已手动关闭当前版本提醒，渲染进程会保持隐藏
-    broadcast('updateAvailable', { latest: r.latest, current: r.current, downloadUrl: r.downloadUrl });
+    broadcast('updateAvailable', { latest: r.latest, current: r.current, downloadUrl: r.downloadUrl, size: r.size || 0 });
   }
 
   // ---------- 生命周期 ----------

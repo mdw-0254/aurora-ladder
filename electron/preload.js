@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('aurora', {
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
   getPlatform: () => ipcRenderer.invoke('app:getPlatform'),
   checkUpdate: () => ipcRenderer.invoke('app:checkUpdate'),
-  updateApp: (url) => ipcRenderer.invoke('app:updateApp', url),
+  updateApp: (payload) => ipcRenderer.invoke('app:updateApp', payload),
   windowControl: (action) => ipcRenderer.invoke('app:windowControl', action),
   openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
   // 订阅推送

@@ -6,7 +6,7 @@ import { toast } from './toast';
 export async function startUpdate() {
   const r = store.updateInfo;
   if (!r || !r.downloadUrl) return;
-  const u = await window.aurora.updateApp(r.downloadUrl);
+  const u = await window.aurora.updateApp({ downloadUrl: r.downloadUrl, size: r.size || 0 });
   if (u && u.error) toast('更新失败：' + u.error, 'error');
   else if (u && u.manual) toast('已打开下载页，请手动下载安装', 'info', 4000);
 }

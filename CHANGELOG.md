@@ -5,6 +5,14 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本 Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [1.0.4] - 2026-08-28
+
+### 变更 / Changed
+
+- 修复更新下载失败：直连 GitHub 下载被网络限制时，自动回退到国内可用加速镜像（ghfast.top / gh.ddlc.top / gh-proxy.com），并做下载完整性校验，全部失败时才提示网络错误
+- 更新提醒不再弹 Windows 系统托盘气泡/对话框，改为 App 界面内柔和呈现：右上角常驻气泡（可手动关闭）+ 侧栏「关于」与「检查更新」按钮小红点
+- 打包产物与 GitHub Release 版本号对齐为 1.0.4
+
 ## [1.0.3] - 2026-08-28
 
 ### 新增 / Added
