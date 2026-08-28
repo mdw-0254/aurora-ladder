@@ -362,27 +362,45 @@ function main() {
     return false;
   }
 
-  // 请求 GitHub Releases 最新版本，返回 { hasUpdate, latest, current, downloadUrl } 或 { error }
+  // 请求 GitHub Releases 检查更新：优先取最新稳定版；若仅存在预发布（/latest 返回 404）则回退取版本列表最新一个
+  // 返回 { hasUpdate, latest, current, downloadUrl, size, notice } 或 { error }
   async function checkUpdate() {
     const current = app.getVersion();
-    const url = `https://api.github.com/repos/${UPDATE_OWNER}/${UPDATE_REPO}/releases/latest`;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const base = `https://api.github.com/repos/${UPDATE_OWNER}/${UPDATE_REPO}`;
+    const headers = { 'User-Agent': 'Aurora', Accept: 'application/vnd.github+json' };
+    const getJson = async (p) => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      try {
+        const res = await fetch(base + p, { headers, signal: ctrl.signal });
+        if (res.status === 404) return null; // 无版本 / 仅预发布
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (e) {
+        if (e.name === 'AbortError') throw new Error('检查超时，请检查网络');
+        throw new Error('网络异常，请检查网络后重试');
+      } finally {
+        clearTimeout(timer);
+      }
+    };
     try {
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'Aurora', Accept: 'application/vnd.github+json' },
-        signal: ctrl.signal
-      });
-      clearTimeout(timer);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
+      let data = await getJson('/releases/latest');
+      if (!data) {
+        const list = await getJson('/releases?per_page=5');
+        data = (list || []).find((r) => !r.draft) || null;
+      }
+      if (!data) return { hasUpdate: false, latest: current, current };
       const latest = String(data.tag_name || '').replace(/^v/i, '');
-      let downloadUrl = data.html_url || url;
       const exe = (data.assets || []).find((a) => /\.exe$/i.test(a && a.name));
-      if (exe && exe.browser_download_url) downloadUrl = exe.browser_download_url;
-      return { hasUpdate: isNewer(latest, current), latest, current, downloadUrl, size: exe ? exe.size : 0 };
+      if (!exe || !exe.browser_download_url) {
+        // 有新版本但尚未上传安装包：不提示可更新，避免下载到无效内容
+        return { hasUpdate: false, latest: current, current, notice: `检测到新版 v${latest}，但暂无可下载的安装包` };
+      }
+      return {
+        hasUpdate: isNewer(latest, current), latest, current,
+        downloadUrl: exe.browser_download_url, size: exe.size || 0, htmlUrl: data.html_url || base
+      };
     } catch (e) {
-      clearTimeout(timer);
       return { error: (e && e.message) || String(e) };
     }
   }

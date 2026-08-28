@@ -5,6 +5,15 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本 Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [1.0.5] - 2026-08-28
+
+### 变更 / Changed
+
+- 修复「检查更新」误报 HTTP 404：当仓库仅存在预发布版本时，GitHub `/releases/latest` 会返回 404，现自动回退到版本列表取最新发布
+- 新版本发布但尚未上传安装包时，提示「暂无可下载的安装包」，不再误报网络错误
+- 相同内容的提示（Toast）不再重复叠加，避免通知风暴
+- 版本号与 GitHub Release `v1.0.5` 对齐
+
 ## [1.0.4] - 2026-08-28
 
 ### 变更 / Changed

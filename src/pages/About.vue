@@ -147,6 +147,9 @@ async function checkForUpdates() {
       store.updateInfo = r;
       store.updateDismissed = null; // 手动检查发现新版时重新提醒
       toast(`发现新版本 v${r.latest}（当前 v${r.current}），点击气泡即可一键更新`, 'info', 4000);
+    } else if (r && r.notice) {
+      store.updateInfo = null;
+      toast(r.notice, 'info', 4000);
     } else {
       store.updateInfo = null;
       toast('当前已是最新版本', 'success');
