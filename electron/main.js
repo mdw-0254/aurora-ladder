@@ -454,37 +454,14 @@ function main() {
     return { ok: true };
   }
 
-  // 同一会话内已提醒过的版本号（避免反复打扰）
-  let notifiedVersion = '';
-
-  // 更新提醒：托盘气泡通知（不硬弹窗）；点击托盘气泡仅聚焦窗口，界面右上角气泡由渲染进程常驻显示
-  function notifyUpdate(r) {
-    if (!tray) return;
-    try {
-      tray.displayBalloon({
-        title: '发现新版本 v' + r.latest,
-        content: 'Aurora v' + r.current + ' → v' + r.latest + '，点击查看更新'
-      });
-      tray.once('balloon-click', () => {
-        if (win) {
-          if (!win.isVisible()) win.show();
-          win.focus();
-        }
-        broadcast('updateAvailable', { latest: r.latest, current: r.current, downloadUrl: r.downloadUrl });
-      });
-    } catch (e) { /* 忽略通知失败 */ }
-  }
-
-  // 后台检查更新：发现新版本时通知渲染进程显示右上角气泡（启动时 + 运行期间周期检查共用）
+  // 后台检查更新：发现新版本时通知渲染进程（右上角常驻气泡 + 侧栏/关于页小红点）
+  // 不弹任何系统托盘气泡 / 对话框，提醒全部在 App 界面内柔和呈现
   async function autoCheckUpdate() {
     let r = null;
     try { r = await checkUpdate(); } catch (e) { r = { error: String(e && e.message || e) }; }
     if (!r || r.error || !r.hasUpdate) return;
-    // 通知渲染进程：右上角常驻气泡 + 侧栏/关于页小红点
+    // 通知渲染进程显示提醒；若用户已手动关闭当前版本提醒，渲染进程会保持隐藏
     broadcast('updateAvailable', { latest: r.latest, current: r.current, downloadUrl: r.downloadUrl });
-    if (r.latest === notifiedVersion) return; // 本会话已提醒过该版本
-    notifiedVersion = r.latest;
-    notifyUpdate(r);
   }
 
   // ---------- 生命周期 ----------
