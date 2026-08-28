@@ -114,7 +114,7 @@ import iconUrl from '../assets/icon.png';
 import donateQr from '../assets/donate-qr.jpg';
 
 // 发布到 GitHub 后，把这里替换成你的仓库地址
-const repoUrl = 'https://github.com/';
+const repoUrl = 'https://github.com/mdw-0254/aurora-ladder';
 const author = {
   name: '歌者超',
   vx: '1016168805'
@@ -133,8 +133,10 @@ async function checkForUpdates() {
       toast('检查更新失败：' + r.error, 'error');
     } else if (r && r.hasUpdate) {
       toast(`发现新版本 v${r.latest}（当前 v${r.current}）`, 'info', 4000);
-      if (confirm(`发现新版本 v${r.latest}\n当前版本 v${r.current}\n\n是否前往下载页面？`)) {
-        window.aurora.openExternal(r.downloadUrl);
+      if (confirm(`发现新版本 v${r.latest}\n当前版本 v${r.current}\n\n是否立即下载并自动更新？\n（下载完成后应用会自动重启）`)) {
+        const u = await window.aurora.updateApp(r.downloadUrl);
+        if (u && u.error) toast('更新失败：' + u.error, 'error');
+        else if (u && u.manual) toast('已打开下载页，请手动下载安装', 'info', 4000);
       }
     } else {
       toast('当前已是最新版本', 'success');

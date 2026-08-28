@@ -25,10 +25,12 @@ contextBridge.exposeInMainWorld('aurora', {
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
   getPlatform: () => ipcRenderer.invoke('app:getPlatform'),
   checkUpdate: () => ipcRenderer.invoke('app:checkUpdate'),
+  updateApp: (url) => ipcRenderer.invoke('app:updateApp', url),
   windowControl: (action) => ipcRenderer.invoke('app:windowControl', action),
   openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
   // 订阅推送
   onStateUpdate: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('stateUpdate', l); return () => ipcRenderer.removeListener('stateUpdate', l); },
   onLogAppend: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('logAppend', l); return () => ipcRenderer.removeListener('logAppend', l); },
-  onConnectionsUpdate: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('connectionsUpdate', l); return () => ipcRenderer.removeListener('connectionsUpdate', l); }
+  onConnectionsUpdate: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('connectionsUpdate', l); return () => ipcRenderer.removeListener('connectionsUpdate', l); },
+  onUpdateProgress: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('updateProgress', l); return () => ipcRenderer.removeListener('updateProgress', l); }
 });

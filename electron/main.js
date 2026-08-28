@@ -1,5 +1,8 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
+const { execFile } = require('child_process');
 const SettingsStore = require('./settings-store');
 const CoreEngine = require('./core');
 const ForwardProxy = require('./proxy-server');
@@ -8,9 +11,9 @@ const subscription = require('./subscription');
 const weatherService = require('./weather');
 const { getAllServers, addSubscription, removeSubscription, removeBatch, getBatches } = require('./servers');
 
-// 更新检查：软件发布后，请把下方 owner / repo 替换为你自己的 GitHub 用户名与仓库名
-const UPDATE_OWNER = '你的GitHub用户名';
-const UPDATE_REPO = '你的仓库名';
+// 更新检查：基于 GitHub Releases 检查新版本（发布 Release 时把安装包作为附件上传）
+const UPDATE_OWNER = 'mdw-0254';
+const UPDATE_REPO = 'aurora-ladder';
 // 未配置（仍是占位符）时不启用更新检查
 const UPDATE_CONFIGURED =
   UPDATE_OWNER && UPDATE_OWNER.indexOf('你的') === -1 &&
@@ -332,6 +335,11 @@ function main() {
     if (!UPDATE_CONFIGURED) return { error: '尚未配置更新仓库（main.js 中的 UPDATE_OWNER / UPDATE_REPO）' };
     return checkUpdate();
   });
+  // 一键静默更新：下载新安装包 → 替换旧包 → 自动重启
+  ipcMain.handle('app:updateApp', async (e, downloadUrl) => {
+    if (!/^https?:\/\//.test(String(downloadUrl || ''))) return { error: '无效的下载地址' };
+    return applyUpdate(String(downloadUrl));
+  });
 
   // ---------- 版本检查 ----------
   // 简单语义化版本比较：a > b 时返回 true（支持 1.0.1、1.0.1-beta 等三段式）
@@ -371,7 +379,82 @@ function main() {
     }
   }
 
-  // 启动后自动检查：发现新版本弹窗，点击「去下载」打开下载页
+  // 从 URL 下载安装包到本地文件（自动跟随跳转、带进度回调），返回下载文件路径
+  async function downloadFile(url, destPath, onProgress) {
+    const res = await fetch(url, { headers: { 'User-Agent': 'Aurora' } });
+    if (!res.ok || !res.body) throw new Error('下载失败：HTTP ' + res.status);
+    const total = parseInt(res.headers.get('content-length') || '0', 10);
+    let received = 0;
+    const file = fs.createWriteStream(destPath);
+    const reader = res.body.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.length;
+      if (onProgress && total) onProgress(Math.min(100, Math.round((received / total) * 100)));
+      if (!file.write(value)) await new Promise((r) => file.once('drain', r));
+    }
+    await new Promise((resolve, reject) => file.end((err) => (err ? reject(err) : resolve())));
+    return destPath;
+  }
+
+  // 一键静默更新：下载新包 → 生成替换/重启脚本 → 退出应用（便携版自动替换；非便携版退回打开下载页）
+  function applyUpdate(downloadUrl) {
+    const portableExe = process.env.PORTABLE_EXECUTABLE_FILE;
+    if (!portableExe) {
+      // 开发模式 / 免安装目录运行时无法原地替换，退回打开下载页
+      shell.openExternal(downloadUrl);
+      return { ok: false, manual: true };
+    }
+    const dir = path.dirname(portableExe);
+    let fileName = '';
+    try { fileName = decodeURIComponent(path.basename(new URL(downloadUrl).pathname)); } catch (e) {}
+    if (!fileName || !/\.exe$/i.test(fileName)) fileName = 'Aurora-update-' + Date.now() + '.exe';
+    const newFile = path.join(dir, fileName);
+    const tmp = newFile + '.update';
+    const pid = process.pid;
+    const q = (s) => '"' + String(s).replace(/%/g, '%%') + '"';
+
+    broadcast('updateProgress', { phase: 'download', percent: 0 });
+    downloadFile(downloadUrl, tmp, (percent) => broadcast('updateProgress', { phase: 'download', percent }))
+      .then(async () => {
+        broadcast('updateProgress', { phase: 'apply' });
+        // 批处理：等本进程退出 → 替换安装包 → 启动新版 → 自删脚本
+        const bat = path.join(os.tmpdir(), 'aurora-update-' + Date.now() + '.bat');
+        fs.writeFileSync(bat, [
+          '@echo off',
+          'chcp 65001 >nul',
+          'setlocal enabledelayedexpansion',
+          'set /a n=0',
+          ':wait',
+          'tasklist /FI "PID eq ' + pid + '" 2>nul | findstr /C:"' + pid + '" >nul',
+          'if not errorlevel 1 (',
+          '  set /a n+=1',
+          '  if !n! lss 90 (',
+          '    timeout /t 1 /nobreak >nul',
+          '    goto wait',
+          '  )',
+          ')',
+          'move /y ' + q(tmp) + ' ' + q(newFile) + ' >nul 2>nul',
+          'if /i not ' + q(newFile) + '==' + q(portableExe) + ' if exist ' + q(portableExe) + ' del /f /q ' + q(portableExe) + ' >nul 2>nul',
+          'start "" ' + q(newFile),
+          'del ' + q(bat) + ' >nul 2>nul',
+          'exit'
+        ].join('\r\n'), 'utf8');
+        execFile('cmd.exe', ['/c', bat], { detached: true, windowsHide: true, stdio: 'ignore' }).unref();
+        // 退出前关闭系统代理，避免残留导致断网
+        try { await setSystemProxy(false); } catch (e) {}
+        quitting = true;
+        setTimeout(() => app.quit(), 300);
+      })
+      .catch((err) => {
+        try { fs.unlinkSync(tmp); } catch (e) {}
+        broadcast('updateProgress', { phase: 'error', message: (err && err.message) || String(err) });
+      });
+    return { ok: true };
+  }
+
+  // 启动后自动检查：发现新版本弹窗，点击「立即更新」自动下载并替换重启
   async function autoCheckUpdate() {
     let r = null;
     try { r = await checkUpdate(); } catch (e) { r = { error: String(e && e.message || e) }; }
@@ -380,13 +463,13 @@ function main() {
       type: 'info',
       title: '发现新版本',
       message: `新版本 v${r.latest} 已发布（当前 v${r.current}）`,
-      detail: '点击「去下载」打开下载页，下载后覆盖旧版本即可。',
-      buttons: ['去下载', '稍后再说'],
+      detail: '点击「立即更新」将自动下载新版并重启，全程无需手动操作。',
+      buttons: ['立即更新', '稍后再说'],
       defaultId: 0,
       cancelId: 1
     };
     const { response } = win ? await dialog.showMessageBox(win, opts) : await dialog.showMessageBox(opts);
-    if (response === 0 && r.downloadUrl) shell.openExternal(r.downloadUrl);
+    if (response === 0 && r.downloadUrl) applyUpdate(r.downloadUrl);
   }
 
   // ---------- 生命周期 ----------

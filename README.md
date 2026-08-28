@@ -225,14 +225,14 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 
 软件启动后延时约 3 秒会自动检查一次更新，也可在「关于」页点击「检查更新」手动检查。检查逻辑通过 GitHub Releases 的 latest 版本号与当前版本号对比，发现新版本时弹出提示并可一键打开下载页。
 
-启用更新的前提是已把源码发布到 GitHub 并创建 Release。发布后需在 `electron/main.js` 顶部把占位符替换为你自己的仓库：
+更新仓库已在 `electron/main.js` 顶部配置为：
 
 ```js
-const UPDATE_OWNER = '你的GitHub用户名';  // 例如 'mdw-0254'
-const UPDATE_REPO = '你的仓库名';          // 例如 'aurora'
+const UPDATE_OWNER = 'mdw-0254';
+const UPDATE_REPO = 'aurora-ladder';
 ```
 
-发布流程：本地修改版本号（`package.json` 的 `version` 字段）→ `npm run dist` 打包出 `.exe` → 在 GitHub 仓库「Releases」中新建 Release，tag 填 `v1.0.1`（带 `v` 前缀，数字与 `version` 对应），并上传 `.exe` 作为附件。用户下次启动或手动检查时即可收到更新提示。
+发布流程：本地修改版本号（`package.json` 的 `version` 字段）→ `npm run dist` 打包出 `.exe` → 在 GitHub 仓库「Releases」中新建 Release，tag 填 `v1.0.2`（带 `v` 前缀，数字与 `version` 对应），并上传 `.exe` 作为附件。用户下次启动或手动检查时即可收到更新提示，点击「去下载」跳转到 Release 下载页，下载新包后覆盖旧版本即可。
 
 ## 参与贡献
 
