@@ -431,7 +431,7 @@ function main() {
           'if not errorlevel 1 (',
           '  set /a n+=1',
           '  if !n! lss 90 (',
-          '    timeout /t 1 /nobreak >nul',
+          '    ping -n 2 127.0.0.1 >nul',
           '    goto wait',
           '  )',
           ')',
