@@ -12,6 +12,17 @@
         </main>
       </div>
     </div>
+    <!-- 右上角常驻更新气泡：有新版时一直显示，直到手动关闭 -->
+    <Transition name="fade">
+      <div v-if="showUpdateBubble" class="update-bubble-global" role="button" tabindex="0" title="点击立即更新" @click="startUpdate" @keydown.enter="startUpdate">
+        <span class="ubg-dot"></span>
+        <span class="ubg-text">有新版本 v{{ store.updateInfo.latest }}</span>
+        <span class="ubg-old">当前 v{{ store.version }}</span>
+        <button class="ubg-close" title="关闭提醒" @click.stop="dismissUpdate">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </Transition>
     <ToastHost />
     <Teleport to="body">
       <Transition name="fade">
@@ -48,7 +59,8 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
-import { store, initApp } from './store';
+import { store, initApp, isUpdateVisible, dismissUpdate } from './store';
+import { startUpdate } from './utils/update';
 import TitleBar from './components/TitleBar.vue';
 import Sidebar from './components/Sidebar.vue';
 import ToastHost from './components/widgets/ToastHost.vue';
@@ -72,6 +84,9 @@ const currentPage = computed(() => pages[store.activePage] || Dashboard);
 
 // 更新进度浮层（下载 / 重启 / 失败）
 const updating = ref(null);
+
+// 右上角常驻气泡：仅在发现新版本且未被手动关闭时显示
+const showUpdateBubble = computed(() => isUpdateVisible());
 
 // 将主题同步到 <html>（:root[data-theme='light'] 才能真正生效）
 function applyTheme(t) {
@@ -115,6 +130,63 @@ onMounted(() => {
   overflow-y: auto;
   padding: 24px 26px 28px;
 }
+
+/* 右上角常驻更新气泡 */
+.update-bubble-global {
+  position: fixed;
+  top: 58px;               /* 标题栏 48px + 10px */
+  right: 16px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 340px;
+  padding: 10px 14px 10px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
+  cursor: pointer;
+  animation: ubg-pulse 2.2s ease-in-out infinite;
+  transition: transform 0.18s;
+}
+.update-bubble-global:hover { transform: translateY(-1px) scale(1.02); }
+.ubg-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  animation: ubg-blink 1.4s ease-in-out infinite;
+  flex: none;
+}
+.ubg-text { white-space: nowrap; }
+.ubg-old {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.75;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  white-space: nowrap;
+}
+.ubg-close {
+  width: 20px; height: 20px;
+  margin-left: 2px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.ubg-close:hover { background: rgba(255, 255, 255, 0.34); transform: scale(1.1); }
+@keyframes ubg-pulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45); }
+  50% { box-shadow: 0 8px 30px rgba(124, 58, 237, 0.8), 0 0 0 3px rgba(139, 92, 246, 0.35); }
+}
+@keyframes ubg-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 /* 更新进度浮层 */
 .update-overlay {

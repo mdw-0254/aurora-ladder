@@ -41,6 +41,7 @@
           <path :d="item.icon" :stroke="store.activePage === item.id ? 'url(#navGrad)' : 'currentColor'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         <span class="nav-label">{{ item.label }}</span>
+        <span v-if="item.id === 'about' && showUpdateDot" class="nav-reddot" title="发现新版本"></span>
       </button>
       <svg width="0" height="0" style="position:absolute"><defs>
         <linearGradient id="navGrad" x1="0" y1="0" x2="1" y2="1">
@@ -76,11 +77,13 @@
 
 <script setup>
 import { computed } from 'vue';
-import { store, navigate, connect, disconnect } from '../store';
+import { store, navigate, connect, disconnect, isUpdateVisible } from '../store';
 import { formatSpeed, formatDuration } from '../utils/format';
 
 const state = computed(() => store.state);
 const connected = computed(() => store.state.state === 'connected');
+// 有新版且未关闭时，「关于」导航显示小红点
+const showUpdateDot = computed(() => isUpdateVisible());
 
 const navs = [
   { id: 'dashboard', label: '总览', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6' },
@@ -204,6 +207,16 @@ async function toggle() {
 .nav-ico { flex: none; transition: transform 0.2s; }
 .nav-item:hover .nav-ico { transform: translateX(1px); }
 .nav-item.active .nav-ico { filter: drop-shadow(0 0 6px rgba(108, 92, 246, 0.7)); }
+.nav-reddot {
+  position: absolute;
+  top: 9px; right: 11px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #f43f5e;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.85);
+  animation: reddot-blink 1.6s ease-in-out infinite;
+}
+@keyframes reddot-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
 /* 底部 */
 .sb-foot {

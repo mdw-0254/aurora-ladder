@@ -29,6 +29,7 @@ export const store = reactive({
   weather: null,
   activePage: 'dashboard',
   updateInfo: null,
+  updateDismissed: null,
   busy: false
 });
 
@@ -68,7 +69,21 @@ export async function initApp() {
     if (store.logs.length > 500) store.logs.splice(0, store.logs.length - 500);
   });
   api.onConnectionsUpdate((list) => (store.connections = list));
-  api.onUpdateAvailable((info) => (store.updateInfo = info));
+  api.onUpdateAvailable((info) => {
+    store.updateInfo = info;
+    // 若出现比上次关闭的版本更新的版本，自动重新提醒
+    if (info && store.updateDismissed && info.latest !== store.updateDismissed) store.updateDismissed = null;
+  });
+}
+
+// 更新提醒是否可见（未被手动关闭）：侧栏/关于页小红点 + 右上角常驻气泡共用
+export function isUpdateVisible() {
+  return !!(store.updateInfo && store.updateDismissed !== store.updateInfo.latest);
+}
+
+// 手动关闭更新提醒（本次会话内不再显示该版本）
+export function dismissUpdate() {
+  if (store.updateInfo) store.updateDismissed = store.updateInfo.latest;
 }
 
 export async function connect() {

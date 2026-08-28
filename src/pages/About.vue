@@ -11,9 +11,10 @@
         <button class="btn btn-ghost btn-sm about-update-btn" @click="checkForUpdates" :disabled="checking">
           <svg viewBox="0 0 24 24" width="14" height="14" :class="{ 'spin': checking }" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {{ checking ? '检查更新中…' : '检查更新' }}
+          <span v-if="showUpdateDot" class="btn-reddot" title="发现新版本"></span>
         </button>
         <Transition name="bubble">
-          <button v-if="store.updateInfo" class="update-bubble" @click="doUpdate" title="点击立即更新">
+          <button v-if="showUpdateDot" class="update-bubble" @click="startUpdate" title="点击立即更新">
             <span class="ub-dot"></span>
             <span class="ub-text">有新版本 v{{ store.updateInfo.latest }}</span>
           </button>
@@ -115,8 +116,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { store } from '../store';
+import { ref, computed } from 'vue';
+import { store, isUpdateVisible } from '../store';
+import { startUpdate } from '../utils/update';
 import { toast } from '../utils/toast';
 import iconUrl from '../assets/icon.png';
 import donateQr from '../assets/donate-qr.jpg';
@@ -131,6 +133,8 @@ const author = {
 const tags = ['Electron', 'Vue 3', 'Vite', '原生代理', '双主题'];
 const showQr = ref(false);
 const checking = ref(false);
+// 有新版且未手动关闭时，「检查更新」按钮与气泡一起显示小红点
+const showUpdateDot = computed(() => isUpdateVisible());
 
 async function checkForUpdates() {
   if (checking.value) return;
@@ -141,8 +145,8 @@ async function checkForUpdates() {
       toast('检查更新失败：' + r.error, 'error');
     } else if (r && r.hasUpdate) {
       store.updateInfo = r;
-      toast(`发现新版本 v${r.latest}（当前 v${r.current}）`, 'info', 4000);
-      await doUpdate();
+      store.updateDismissed = null; // 手动检查发现新版时重新提醒
+      toast(`发现新版本 v${r.latest}（当前 v${r.current}），点击气泡即可一键更新`, 'info', 4000);
     } else {
       store.updateInfo = null;
       toast('当前已是最新版本', 'success');
@@ -151,17 +155,6 @@ async function checkForUpdates() {
     toast('检查更新失败：' + (e && e.message || e), 'error');
   } finally {
     checking.value = false;
-  }
-}
-
-// 一键立即更新（「检查更新」与「有新版本」气泡共用）
-async function doUpdate() {
-  const r = store.updateInfo;
-  if (!r || !r.downloadUrl) return;
-  if (confirm(`发现新版本 v${r.latest}\n当前版本 v${store.version}\n\n是否立即下载并自动更新？\n（下载完成后应用会自动重启）`)) {
-    const u = await window.aurora.updateApp(r.downloadUrl);
-    if (u && u.error) toast('更新失败：' + u.error, 'error');
-    else if (u && u.manual) toast('已打开下载页，请手动下载安装', 'info', 4000);
   }
 }
 
@@ -203,9 +196,19 @@ async function copyVx() {
 .about-name { font-size: 27px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 5px; }
 .about-version { font-size: 12.5px; color: var(--text-3); margin-bottom: 10px; }
 .about-update-area { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.about-update-btn { gap: 6px; }
+.about-update-btn { position: relative; gap: 6px; }
 .about-update-btn:disabled { opacity: 0.55; cursor: default; }
 .about-update-btn .spin { animation: qr-spin 1s linear infinite; }
+.btn-reddot {
+  position: absolute;
+  top: -3px; right: -3px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #f43f5e;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.85);
+  animation: btn-reddot-blink 1.6s ease-in-out infinite;
+}
+@keyframes btn-reddot-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 @keyframes qr-spin { to { transform: rotate(360deg); } }
 .update-bubble {
   position: relative;
