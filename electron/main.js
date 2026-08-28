@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell } = require(
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { execFile } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const SettingsStore = require('./settings-store');
 const CoreEngine = require('./core');
 const ForwardProxy = require('./proxy-server');
@@ -25,6 +25,43 @@ const GH_MIRRORS = [
   'https://gh.ddlc.top/',
   'https://gh-proxy.com/'
 ];
+
+// Gitee 镜像仓库（内网/公司网络下优先从 Gitee 下载安装包，访问更稳定）
+// Gitee 附件直链与 GitHub Release 下载 URL 同构：/releases/download/{tag}/{fileName}
+const GITEE_OWNER = 'mdw521';
+
+// 更新状态：下载完成（便携版）后记录待自动应用的信息；程序退出时用它替换旧 exe 并启动新版
+let pendingUpdate = null;
+let updateSpawned = false;
+// 把 GitHub Release 下载地址转换成对应 Gitee 直链；不是 GitHub 下载地址时返回 null
+function toGiteeDownloadUrl(u) {
+  const m = /^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\/([^/?]+)\/([^/?]+)$/i.exec(String(u || ''));
+  if (!m) return null;
+  return `https://gitee.com/${GITEE_OWNER}/${UPDATE_REPO}/releases/download/${encodeURIComponent(m[1])}/${encodeURIComponent(m[2])}`;
+}
+// 把 Gitee 直链转换回对应 GitHub Release 下载地址（作为 Gitee 不可用时的兜底）；不是 Gitee 直链时返回 null
+function toGitHubDownloadUrl(u) {
+  const m = /^https:\/\/gitee\.com\/[^/]+\/[^/]+\/releases\/download\/([^/?]+)\/([^/?]+)$/i.exec(String(u || ''));
+  if (!m) return null;
+  return `https://github.com/${UPDATE_OWNER}/${UPDATE_REPO}/releases/download/${encodeURIComponent(m[1])}/${encodeURIComponent(m[2])}`;
+}
+// 展开下载候选源：优先 Gitee 直链 → GitHub 加速镜像 → GitHub 直连兜底；非 release 链接原样返回
+function expandDownloadSources(url) {
+  const sources = [];
+  let gitee = null, github = null;
+  if (/^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\//i.test(String(url || ''))) {
+    github = url; gitee = toGiteeDownloadUrl(url);
+  } else if (/^https:\/\/gitee\.com\/[^/]+\/[^/]+\/releases\/download\//i.test(String(url || ''))) {
+    gitee = url; github = toGitHubDownloadUrl(url);
+  }
+  if (gitee) sources.push(gitee);                 // ① 优先 Gitee
+  if (github) {                                   // ② GitHub 镜像 + 直连兜底
+    GH_MIRRORS.forEach((m) => sources.push(m + github));
+    sources.push(github);
+  }
+  if (!gitee && !github) sources.push(url);       // ③ 非 release 链接原样
+  return sources;
+}
 
 // 单实例锁
 const gotLock = app.requestSingleInstanceLock();
@@ -342,11 +379,27 @@ function main() {
     if (!UPDATE_CONFIGURED) return { error: '尚未配置更新仓库（main.js 中的 UPDATE_OWNER / UPDATE_REPO）' };
     return checkUpdate();
   });
-  // 一键静默更新：下载新安装包 → 替换旧包 → 自动重启
+  // 一键下载新版：下载完整安装包 → 界面引导用户手动替换（不做自动退出/替换/重启）
   ipcMain.handle('app:updateApp', async (e, payload) => {
     const url = (payload && payload.downloadUrl) || '';
     if (!/^https?:\/\//.test(String(url))) return { error: '无效的下载地址' };
     return applyUpdate(String(url), (payload && payload.size) || 0);
+  });
+  // 强制退出并应用已下载的更新：先置 quitting=true（绕过「关闭到托盘」拦截），
+  // 并在退出前立即启动自动更新进程；若当前没有待装更新则仅退出。
+  ipcMain.handle('app:quitForUpdate', () => {
+    quitting = true;
+    if (pendingUpdate && pendingUpdate.oldExe && pendingUpdate.newFile && !updateSpawned) {
+      updateSpawned = true;
+      try { spawnAutoUpdate(pendingUpdate.oldExe, pendingUpdate.newFile); } catch (e) {}
+    }
+    app.quit();
+    return true;
+  });
+  // 在系统文件管理器中定位已下载的新安装包（供「打开所在文件夹」按钮使用）
+  ipcMain.handle('app:showItemInFolder', (e, p) => {
+    if (!p || typeof p !== 'string') return false;
+    try { shell.showItemInFolder(p); return true; } catch (err) { return false; }
   });
 
   // ---------- 版本检查 ----------
@@ -362,17 +415,18 @@ function main() {
     return false;
   }
 
-  // 请求 GitHub Releases 检查更新：优先取最新稳定版；若仅存在预发布（/latest 返回 404）则回退取版本列表最新一个
+  // 检查更新：优先查询 Gitee（国内快、不受 GitHub 限制）；Gitee 不可用时回退 GitHub
   // 返回 { hasUpdate, latest, current, downloadUrl, size, notice } 或 { error }
   async function checkUpdate() {
     const current = app.getVersion();
-    const base = `https://api.github.com/repos/${UPDATE_OWNER}/${UPDATE_REPO}`;
-    const headers = { 'User-Agent': 'Aurora', Accept: 'application/vnd.github+json' };
-    const getJson = async (p) => {
+    const baseGitee = `https://gitee.com/api/v5/repos/${GITEE_OWNER}/${UPDATE_REPO}`;
+    const baseGh = `https://api.github.com/repos/${UPDATE_OWNER}/${UPDATE_REPO}`;
+    const ghHeaders = { 'User-Agent': 'Aurora', Accept: 'application/vnd.github+json' };
+    const getJson = async (base, p, headers) => {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 8000);
       try {
-        const res = await fetch(base + p, { headers, signal: ctrl.signal });
+        const res = await fetch(base + p, { headers: headers || { 'User-Agent': 'Aurora' }, signal: ctrl.signal });
         if (res.status === 404) return null; // 无版本 / 仅预发布
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return await res.json();
@@ -383,10 +437,34 @@ function main() {
         clearTimeout(timer);
       }
     };
+
+    // 来源① 优先 Gitee：latest release → 附件列表 → 构造 Gitee 直链下载
     try {
-      let data = await getJson('/releases/latest');
+      const rel = await getJson(baseGitee, '/releases/latest');
+      if (rel && rel.tag_name) {
+        const tag = String(rel.tag_name || '').replace(/^v/i, '');
+        let exeName = '', exeSize = 0;
+        try {
+          const afs = await getJson(baseGitee, `/releases/${rel.id}/attach_files`) || [];
+          const exe = afs.find((a) => /\.exe$/i.test(a && a.name) && a.name);
+          if (exe) { exeName = exe.name; exeSize = exe.size || 0; }
+        } catch (e) { /* 附件接口失败则按无附件处理 */ }
+        if (!exeName) {
+          return { hasUpdate: false, latest: current, current, notice: `检测到新版 v${tag}，但暂无可下载的安装包` };
+        }
+        const dl = `https://gitee.com/${GITEE_OWNER}/${UPDATE_REPO}/releases/download/${encodeURIComponent(rel.tag_name)}/${encodeURIComponent(exeName)}`;
+        return {
+          hasUpdate: isNewer(tag, current), latest: tag, current,
+          downloadUrl: dl, size: exeSize || 0, htmlUrl: rel.html_url || baseGitee, source: 'gitee'
+        };
+      }
+    } catch (e) { /* Gitee 不可用则回退 GitHub */ }
+
+    // 来源② 回退 GitHub：优先取最新稳定版；若仅存在预发布（/latest 返回 404）则回退取版本列表最新一个
+    try {
+      let data = await getJson(baseGh, '/releases/latest', ghHeaders);
       if (!data) {
-        const list = await getJson('/releases?per_page=5');
+        const list = await getJson(baseGh, '/releases?per_page=5', ghHeaders);
         data = (list || []).find((r) => !r.draft) || null;
       }
       if (!data) return { hasUpdate: false, latest: current, current };
@@ -398,7 +476,7 @@ function main() {
       }
       return {
         hasUpdate: isNewer(latest, current), latest, current,
-        downloadUrl: exe.browser_download_url, size: exe.size || 0, htmlUrl: data.html_url || base
+        downloadUrl: exe.browser_download_url, size: exe.size || 0, htmlUrl: data.html_url || baseGh, source: 'github'
       };
     } catch (e) {
       return { error: (e && e.message) || String(e) };
@@ -407,14 +485,8 @@ function main() {
 
   // 从 URL 下载安装包到本地文件（多源镜像回退 + 完整性校验 + 进度回调），返回下载文件路径
   async function downloadFile(url, destPath, onProgress, expectedSize) {
-    // 候选下载源：GitHub 链接先走国内加速镜像，最后兜底直连；其他链接直接下载
-    const sources = [];
-    if (/^https:\/\/(github\.com|objects\.githubusercontent\.com|release-assets\.githubusercontent\.com)\//i.test(url)) {
-      GH_MIRRORS.forEach((m) => sources.push(m + url));
-      sources.push(url);
-    } else {
-      sources.push(url);
-    }
+    // 候选下载源：优先 Gitee 直链 → GitHub 加速镜像 → GitHub 直连兜底；其他链接直接下载
+    const sources = expandDownloadSources(url);
     let lastErr = null;
     for (const src of sources) {
       try {
@@ -449,60 +521,113 @@ function main() {
     return destPath;
   }
 
-  // 一键静默更新：下载新包 → 生成替换/重启脚本 → 退出应用（便携版自动替换；非便携版退回打开下载页）
+  // ---------- 更新诊断日志 ----------
+  // 把更新替换/重启的每一步（以及 PowerShell 子进程的执行结果）写入 <安装包目录>/update.log
+  // 便于定位「下载完成但未重启」类问题：被杀软拦截 / 中文路径 / 退出时序等都能看到
+  function updateLogPath(portableExe) {
+    if (!portableExe) return path.join(app.getPath('userData'), 'update.log');
+    const prefer = path.join(path.dirname(portableExe), 'update.log');
+    try {
+      fs.writeFileSync(prefer, '', { flag: 'a' });
+      return prefer;
+    } catch (e) {
+      return path.join(app.getPath('userData'), 'update.log');
+    }
+  }
+  function logUpdate(portableExe, msg) {
+    try {
+      const p = updateLogPath(portableExe);
+      fs.appendFileSync(p, '[' + new Date().toLocaleString() + '] ' + msg + '\n', 'utf8');
+    } catch (e) { /* 日志失败不阻断主流程 */ }
+  }
+
+  // 一键下载新版：仅把完整安装包下载到「程序同目录」，完成后在界面给出清晰的手动替换指引
+  // 说明：不做后台退出/替换/重启（公司安全软件普遍会拦截「覆盖 exe + 自启」行为，历史上 PowerShell/cmd 方案均因此失效），
+  //       改为「下载完成 → 用户退出程序 → 双击新包运行（或用它覆盖旧文件）」的稳妥方式，下载不会白费
   function applyUpdate(downloadUrl, expectedSize) {
     const portableExe = process.env.PORTABLE_EXECUTABLE_FILE;
-    if (!portableExe) {
-      // 开发模式 / 免安装目录运行时无法原地替换，退回打开下载页
-      shell.openExternal(downloadUrl);
-      return { ok: false, manual: true };
-    }
-    const dir = path.dirname(portableExe);
+    // 便携版下载到程序同目录（方便用户直接找到并替换）；非便携版下载到系统「下载」目录
+    const dir = portableExe ? path.dirname(portableExe) : app.getPath('downloads');
     let fileName = '';
     try { fileName = decodeURIComponent(path.basename(new URL(downloadUrl).pathname)); } catch (e) {}
-    if (!fileName || !/\.exe$/i.test(fileName)) fileName = 'Aurora-update-' + Date.now() + '.exe';
+    if (!fileName || !/\.exe$/i.test(fileName)) fileName = 'Aurora-' + app.getVersion() + '-portable.exe';
     const newFile = path.join(dir, fileName);
-    const tmp = newFile + '.update';
-    const pid = process.pid;
-    const q = (s) => '"' + String(s).replace(/%/g, '%%') + '"';
+    // 下载期间用隐藏后缀，避免下载到一半被误双击；完成后改名为正式 exe
+    const tmp = newFile + '.download';
+    logUpdate(portableExe, 'start download. newFile=' + newFile + ' tmp=' + tmp + ' expectedSize=' + expectedSize);
 
     broadcast('updateProgress', { phase: 'download', percent: 0 });
     downloadFile(downloadUrl, tmp, (percent) => broadcast('updateProgress', { phase: 'download', percent }), expectedSize)
-      .then(async () => {
-        broadcast('updateProgress', { phase: 'apply' });
-        // 批处理：等本进程退出 → 替换安装包 → 启动新版 → 自删脚本
-        const bat = path.join(os.tmpdir(), 'aurora-update-' + Date.now() + '.bat');
-        fs.writeFileSync(bat, [
-          '@echo off',
-          'chcp 65001 >nul',
-          'setlocal enabledelayedexpansion',
-          'set /a n=0',
-          ':wait',
-          'tasklist /FI "PID eq ' + pid + '" 2>nul | findstr /C:"' + pid + '" >nul',
-          'if not errorlevel 1 (',
-          '  set /a n+=1',
-          '  if !n! lss 90 (',
-          '    ping -n 2 127.0.0.1 >nul',
-          '    goto wait',
-          '  )',
-          ')',
-          'move /y ' + q(tmp) + ' ' + q(newFile) + ' >nul 2>nul',
-          'if /i not ' + q(newFile) + '==' + q(portableExe) + ' if exist ' + q(portableExe) + ' del /f /q ' + q(portableExe) + ' >nul 2>nul',
-          'start "" ' + q(newFile),
-          'del ' + q(bat) + ' >nul 2>nul',
-          'exit'
-        ].join('\r\n'), 'utf8');
-        execFile('cmd.exe', ['/c', bat], { detached: true, windowsHide: true, stdio: 'ignore' }).unref();
-        // 退出前关闭系统代理，避免残留导致断网
-        try { await setSystemProxy(false); } catch (e) {}
-        quitting = true;
-        setTimeout(() => app.quit(), 300);
+      .then(() => {
+        // 下载完整 → 改名为正式安装包
+        let final = newFile;
+        try {
+          if (fs.existsSync(newFile)) fs.unlinkSync(newFile);
+          fs.renameSync(tmp, newFile);
+        } catch (e) {
+          try { fs.copyFileSync(tmp, newFile); fs.unlinkSync(tmp); } catch (_) { final = tmp; }
+        }
+        logUpdate(portableExe, 'download done -> ' + final);
+        // 便携版：记录待自动应用（退出程序时覆盖旧 exe 并启动新版）；非便携版仍走手动指引
+        const auto = !!portableExe && !!final && final.toLowerCase() !== String(portableExe).toLowerCase();
+        pendingUpdate = auto ? { oldExe: portableExe, newFile: final, fileName } : null;
+        updateSpawned = false;
+        broadcast('updateProgress', { phase: 'ready', path: final, oldExe: portableExe || '', fileName, auto });
+        return { ok: true, downloaded: true, path: final, auto };
       })
       .catch((err) => {
+        logUpdate(portableExe, 'download failed: ' + ((err && err.message) || String(err)));
         try { fs.unlinkSync(tmp); } catch (e) {}
         broadcast('updateProgress', { phase: 'error', message: (err && err.message) || String(err) });
+        return { ok: false, error: (err && err.message) || String(err) };
       });
     return { ok: true };
+  }
+
+  // 生成并启动「分离式」PowerShell 自动更新进程：等旧程序退出后 → 直接启动新版 exe 文件。
+  // 刻意【不去覆盖旧 exe】：公司安全软件普遍拦截「覆盖 exe + 绕过原文件自启」，改为让新版以独立文件运行，
+  // 只做「等待旧进程结束 + 启动新版」，把易被拦截的写文件动作降到最低。
+  // 通过 detached + 环境变量传参（而非把路径拼进命令行），规避中文路径与编码问题；
+  // 该进程不随主进程退出而终止，因而能等主程序完全关闭后再启动新版。
+  function spawnAutoUpdate(oldExe, newExe) {
+    const log = updateLogPath(oldExe);
+    const script = [
+      '$ErrorActionPreference = "SilentlyContinue"',
+      '$old = $env:AURORA_OLD',
+      '$new = $env:AURORA_NEW',
+      '$log = $env:AURORA_UPLOG',
+      'Add-Content -LiteralPath $log -Value ("[auto] script started") -Encoding UTF8',
+      '$oldName = [IO.Path]::GetFileNameWithoutExtension($old)',
+      'for ($i = 0; $i -lt 600; $i++) {',                       // 最多等约 5 分钟旧进程退出，避免单实例锁冲突
+      '  $p = Get-Process -Name $oldName -ErrorAction SilentlyContinue',
+      '  if (-not $p) { break }',
+      '  Start-Sleep -Milliseconds 500',
+      '}',
+      'Start-Sleep -Milliseconds 1200',
+      'try {',
+      '  if (Test-Path -LiteralPath $new) {',
+      '    Start-Process -FilePath $new',
+      '    Add-Content -LiteralPath $log -Value ("[auto] launched new: " + $new) -Encoding UTF8',
+      '  } else {',
+      '    Add-Content -LiteralPath $log -Value ("[auto] new missing: " + $new) -Encoding UTF8',
+      '  }',
+      '} catch {',
+      '  Add-Content -LiteralPath $log -Value ("[auto] failed: " + $_.Exception.Message) -Encoding UTF8',
+      '}'
+    ].join('\r\n');
+    const b64 = Buffer.from(script, 'utf16le').toString('base64');
+    try {
+      const cp = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', b64], {
+        detached: true, stdio: 'ignore', windowsHide: true,
+        env: Object.assign({}, process.env, { AURORA_OLD: oldExe, AURORA_NEW: newExe, AURORA_UPLOG: log })
+      });
+      cp.unref();
+      logUpdate(oldExe, 'spawned auto-update. pid=' + cp.pid);
+      return true;
+    } catch (e) {
+      logUpdate(oldExe, 'spawn auto-update failed: ' + ((e && e.message) || String(e)));
+      return false;
+    }
   }
 
   // 后台检查更新：发现新版本时通知渲染进程（右上角常驻气泡 + 侧栏/关于页小红点）
@@ -784,6 +909,13 @@ function main() {
     }
   });
 
-  app.on('before-quit', () => { quitting = true; });
+  app.on('before-quit', () => {
+    quitting = true;
+    // 若已下载便携版更新包，则在退出瞬间启动自动更新进程（等待本进程结束后覆盖 exe 并打开新版本）
+    if (pendingUpdate && pendingUpdate.oldExe && pendingUpdate.newFile && !updateSpawned) {
+      updateSpawned = true;
+      try { spawnAutoUpdate(pendingUpdate.oldExe, pendingUpdate.newFile); } catch (e) {}
+    }
+  });
   app.on('window-all-closed', () => { app.quit(); });
 }

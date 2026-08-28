@@ -34,13 +34,37 @@
               </div>
               <div class="update-title">正在下载更新 {{ updating.percent || 0 }}%</div>
               <div class="update-bar"><div class="update-fill" :style="{ width: (updating.percent || 0) + '%' }"></div></div>
-              <div class="update-sub">下载完成后将自动重启，请稍候</div>
+              <div class="update-sub">下载完成后请在下方按提示手动替换</div>
             </template>
-            <template v-else-if="updating.phase === 'apply'">
-              <div class="update-icon spin">
-                <svg viewBox="0 0 24 24" width="30" height="30" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </div>
-              <div class="update-title">更新已完成，正在重启…</div>
+            <template v-else-if="updating.phase === 'ready'">
+              <template v-if="updating.auto">
+                <div class="update-icon ok">
+                  <svg viewBox="0 0 24 24" width="30" height="30" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="update-title">更新已就绪</div>
+                <div class="update-sub">点击下方按钮将退出程序并自动完成升级、打开新版本（若开了"关闭到托盘"，请勿只点窗口×）</div>
+                <div class="update-actions">
+                  <button class="update-cta" @click="quitNow">立即关闭并更新</button>
+                  <button class="update-close" @click="openDownloadFolder">打开所在文件夹</button>
+                  <button class="update-close" @click="updating = null">稍后</button>
+                </div>
+              </template>
+              <template v-else>
+                <div class="update-icon ok">
+                  <svg viewBox="0 0 24 24" width="30" height="30" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="update-title">新版本已下载完成</div>
+                <div class="update-steps">
+                  <div class="ustep"><span>1</span>先退出当前程序</div>
+                  <div class="ustep"><span>2</span>双击运行下面的新安装包，或用它覆盖旧程序文件，即完成升级</div>
+                </div>
+                <div class="update-path" :title="updating.path">{{ updating.path }}</div>
+                <div class="update-actions">
+                  <button class="update-close" @click="openDownloadFolder">打开所在文件夹</button>
+                  <button class="update-close" @click="copyUpdatePath">复制路径</button>
+                  <button class="update-close" @click="updating = null">关闭</button>
+                </div>
+              </template>
             </template>
             <template v-else-if="updating.phase === 'error'">
               <div class="update-icon">
@@ -61,6 +85,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { store, initApp, isUpdateVisible, dismissUpdate } from './store';
 import { startUpdate } from './utils/update';
+import { toast } from './utils/toast';
 import TitleBar from './components/TitleBar.vue';
 import Sidebar from './components/Sidebar.vue';
 import ToastHost from './components/widgets/ToastHost.vue';
@@ -101,6 +126,24 @@ onMounted(() => {
     window.aurora.onUpdateProgress((p) => { updating.value = p; });
   }
 });
+
+// 更新下载完成后的辅助操作：定位文件 / 复制路径
+function openDownloadFolder() {
+  if (!updating.value || !updating.value.path) return;
+  if (window.aurora && window.aurora.showItemInFolder) window.aurora.showItemInFolder(updating.value.path);
+}
+function copyUpdatePath() {
+  if (!updating.value || !updating.value.path) return;
+  navigator.clipboard.writeText(updating.value.path).then(() => {
+    toast('安装包路径已复制', 'info');
+  }).catch(() => {});
+}
+// 立即关闭并更新：走 IPC 强制退出（绕过「关闭到托盘」），主进程退出瞬间自动覆盖 exe 并启动新版
+function quitNow() {
+  updating.value = null;
+  if (window.aurora && window.aurora.quitForUpdate) { window.aurora.quitForUpdate(); return; }
+  try { window.close(); } catch (e) {}
+}
 </script>
 
 <style scoped>
@@ -236,6 +279,18 @@ onMounted(() => {
   transition: border-color 0.18s, color 0.18s;
 }
 .update-close:hover { border-color: var(--accent-1); color: var(--accent-1); }
+.update-cta {
+  margin-top: 14px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 12.5px; font-weight: 700;
+  color: #fff;
+  background: var(--accent-1);
+  border: 1px solid var(--accent-1);
+  cursor: pointer;
+  transition: opacity 0.18s, filter 0.18s;
+}
+.update-cta:hover { opacity: 0.88; filter: brightness(1.06); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.22s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

@@ -11,7 +11,7 @@
 ![Electron](https://img.shields.io/badge/Electron-33-47848F.svg)
 ![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)
 ![Build](https://img.shields.io/badge/build-Vite%206-646cff.svg)
-![Release](https://img.shields.io/badge/release-v1.0.0-green.svg)
+![Release](https://img.shields.io/badge/release-v1.0.17-green.svg)
 
 </div>
 
@@ -61,7 +61,7 @@ Aurora 是一个界面精致、交互流畅的桌面代理客户端，适合需�
 - **顶部信息栏**：自动显示日期、城市天气与连接状态
 - **深色 / 浅色双主题**：紫青科技风深色 + 央视红金白浅色，全局设计系统统一，雷达、速率、图表、按钮均随主题自适应配色
 - **原生 Windows 托盘**：关闭最小化到托盘，后台常驻
-- **版本更新**：启动后自动检查 + 「关于」页手动检查，基于 GitHub Releases 比对版本号，一键跳转下载
+- **版本更新**：启动自动检查 + 「关于」页手动检查，优先比对 Gitee（同款发布在 GitHub 兜底），下载完成即可自动升级并打开新版
 - **纯 Node.js HTTP / HTTPS 正向代理**，无第三方代理内核依赖
 - **单文件绿色便携版**，双击即用，无需安装
 
@@ -154,7 +154,7 @@ Aurora 是一个界面精致、交互流畅的桌面代理客户端，适合需�
 
 ### 直接使用发行版
 
-从 [Releases](releases) 下载 `Aurora-1.0.0-portable.exe`，双击运行即可，无需安装。
+从 [Releases](releases) 下载 `Aurora-1.0.17-portable.exe`，双击运行即可，无需安装。
 
 1. 启动后进入左侧「节点」页，点击「导入订阅」粘贴订阅链接
 2. 导入成功后，点击任一节点卡片即可选中（可先做延迟测试）
@@ -201,7 +201,7 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 
 ## 操作手册
 
-便携版安装包位置：`release/Aurora-1.0.0-portable.exe`（单文件，双击即用，无需安装；被安全软件提示时选择"更多信息 → 仍要运行"）。
+便携版安装包位置：`release/Aurora-1.0.17-portable.exe`（单文件，双击即用，无需安装；被安全软件提示时选择"更多信息 → 仍要运行"）。
 
 为不同用户准备了详细的操作手册（HTML 版，浏览器打开即可阅读）：
 
@@ -223,16 +223,38 @@ electron_mirror=https://npmmirror.com/mirrors/electron/
 
 ## 软件更新
 
-软件启动后延时约 3 秒会自动检查一次更新，也可在「关于」页点击「检查更新」手动检查。检查逻辑通过 GitHub Releases 的 latest 版本号与当前版本号对比，发现新版本时弹出提示并可一键打开下载页。
+软件启动后延时约 3 秒会自动检查一次更新，也可在「关于」页点击「检查更新」手动检查。版本号比对通过 Gitee 与 GitHub 两个仓库进行：
+
+- **优先 Gitee**：先查询 Gitee 仓库 `mdw521/aurora-ladder` 的最新发行版（国内更稳、不受 GitHub 访问限制）
+- **GitHub 兜底**：Gitee 不可达时回退查询 GitHub 仓库 `mdw-0254/aurora-ladder`
+- **下载多源回退**：Gitee 直链(优先) → GitHub 加速镜像（ghfast.top / gh.ddlc.top / gh-proxy.com）→ GitHub 直连，任一来源失败自动切换，并对下载做完整性校验
 
 更新仓库已在 `electron/main.js` 顶部配置为：
 
 ```js
-const UPDATE_OWNER = 'mdw-0254';
-const UPDATE_REPO = 'aurora-ladder';
+const UPDATE_OWNER  = 'mdw-0254';   // GitHub
+const UPDATE_REPO   = 'aurora-ladder';
+const GITEE_OWNER   = 'mdw521';     // Gitee（优先）
 ```
 
-发布流程：本地修改版本号（`package.json` 的 `version` 字段）→ `npm run dist` 打包出 `.exe` → 在 GitHub 仓库「Releases」中新建 Release，tag 填 `v1.0.2`（带 `v` 前缀，数字与 `version` 对应），并上传 `.exe` 作为附件。用户下次启动或手动检查时即可收到更新提示，点击「去下载」跳转到 Release 下载页，下载新包后覆盖旧版本即可。
+### 自动更新（便携版）
+
+便携版下载完成后，界面出现「更新已就绪」，点击「**立即关闭并更新**」即可：
+
+1. 程序先真正退出（会绕开「关闭到托盘」，所以请点按钮而非仅点窗口 ×）
+2. 待主程序完全退出后，自动**启动已下载的新版 exe**（以独立文件运行，不做覆盖操作，避免被安全软件拦截）
+3. 自动打开新版本窗口，即完成升级
+
+> 说明：升级过程的关键步骤会写入安装包所在目录的 `update.log`，便于排查（杀软拦截 / 退出时序等）。
+
+### 发布新版
+
+1. 修改 `package.json` 的 `version` 字段
+2. `npm run dist` 打包生成 `release/Aurora-<版本>-portable.exe`
+3. 到 **Gitee**（`mdw521/aurora-ladder`）新建「发行版」，Tag 填 `v1.X.Y`（带 `v` 前缀，数值与 version 一致），上传 exe 附件
+4. 到 **GitHub**（`mdw-0254/aurora-ladder`）发布同款，作为兜底下载源
+
+用户下次启动或手动检查时即可收到更新提示并一键升级。
 
 ## 参与贡献
 

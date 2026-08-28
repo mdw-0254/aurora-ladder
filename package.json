@@ -1,6 +1,6 @@
 {
   "name": "aurora",
-  "version": "1.0.5",
+  "version": "1.0.17",
   "description": "Aurora - 简约精致的 Windows 代理客户端（Electron + Vue 3 + Vite），支持订阅导入、多节点、Shadowsocks、系统代理、实时流量监控、双主题",
   "main": "electron/main.js",
   "author": "歌者超",
