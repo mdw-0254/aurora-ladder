@@ -7,10 +7,18 @@
       </div>
       <div class="about-name">Aurora</div>
       <div class="about-version mono">v{{ store.version }} · {{ store.platform.platform }} {{ store.platform.arch }}</div>
-      <button class="btn btn-ghost btn-sm about-update-btn" @click="checkForUpdates" :disabled="checking">
-        <svg viewBox="0 0 24 24" width="14" height="14" :class="{ 'spin': checking }" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        {{ checking ? '检查更新中…' : '检查更新' }}
-      </button>
+      <div class="about-update-area">
+        <button class="btn btn-ghost btn-sm about-update-btn" @click="checkForUpdates" :disabled="checking">
+          <svg viewBox="0 0 24 24" width="14" height="14" :class="{ 'spin': checking }" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          {{ checking ? '检查更新中…' : '检查更新' }}
+        </button>
+        <Transition name="bubble">
+          <button v-if="store.updateInfo" class="update-bubble" @click="doUpdate" title="点击立即更新">
+            <span class="ub-dot"></span>
+            <span class="ub-text">有新版本 v{{ store.updateInfo.latest }}</span>
+          </button>
+        </Transition>
+      </div>
       <div class="about-desc">
         简约而精致的代理客户端 · 基于 Electron + Vue3 构建<br />
         纯 Node.js 代理内核 · 支持多协议订阅导入与全局安全代理
@@ -132,19 +140,28 @@ async function checkForUpdates() {
     if (r && r.error) {
       toast('检查更新失败：' + r.error, 'error');
     } else if (r && r.hasUpdate) {
+      store.updateInfo = r;
       toast(`发现新版本 v${r.latest}（当前 v${r.current}）`, 'info', 4000);
-      if (confirm(`发现新版本 v${r.latest}\n当前版本 v${r.current}\n\n是否立即下载并自动更新？\n（下载完成后应用会自动重启）`)) {
-        const u = await window.aurora.updateApp(r.downloadUrl);
-        if (u && u.error) toast('更新失败：' + u.error, 'error');
-        else if (u && u.manual) toast('已打开下载页，请手动下载安装', 'info', 4000);
-      }
+      await doUpdate();
     } else {
+      store.updateInfo = null;
       toast('当前已是最新版本', 'success');
     }
   } catch (e) {
     toast('检查更新失败：' + (e && e.message || e), 'error');
   } finally {
     checking.value = false;
+  }
+}
+
+// 一键立即更新（「检查更新」与「有新版本」气泡共用）
+async function doUpdate() {
+  const r = store.updateInfo;
+  if (!r || !r.downloadUrl) return;
+  if (confirm(`发现新版本 v${r.latest}\n当前版本 v${store.version}\n\n是否立即下载并自动更新？\n（下载完成后应用会自动重启）`)) {
+    const u = await window.aurora.updateApp(r.downloadUrl);
+    if (u && u.error) toast('更新失败：' + u.error, 'error');
+    else if (u && u.manual) toast('已打开下载页，请手动下载安装', 'info', 4000);
   }
 }
 
@@ -185,10 +202,48 @@ async function copyVx() {
 }
 .about-name { font-size: 27px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 5px; }
 .about-version { font-size: 12.5px; color: var(--text-3); margin-bottom: 10px; }
-.about-update-btn { margin-bottom: 14px; gap: 6px; }
+.about-update-area { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.about-update-btn { gap: 6px; }
 .about-update-btn:disabled { opacity: 0.55; cursor: default; }
 .about-update-btn .spin { animation: qr-spin 1s linear infinite; }
 @keyframes qr-spin { to { transform: rotate(360deg); } }
+.update-bubble {
+  position: relative;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45);
+  cursor: pointer;
+  animation: ub-pulse 2.2s ease-in-out infinite;
+  transition: transform 0.18s;
+}
+.update-bubble:hover { transform: translateY(-1px) scale(1.03); }
+.update-bubble::after {
+  content: '';
+  position: absolute; left: -5px; top: 50%;
+  width: 10px; height: 10px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+.ub-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  animation: ub-blink 1.4s ease-in-out infinite;
+}
+@keyframes ub-pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45); }
+  50% { box-shadow: 0 4px 24px rgba(124, 58, 237, 0.8), 0 0 0 2px rgba(139, 92, 246, 0.35); }
+}
+@keyframes ub-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.bubble-enter-active, .bubble-leave-active { transition: opacity 0.25s, transform 0.25s; }
+.bubble-enter-from, .bubble-leave-to { opacity: 0; transform: translateY(4px); }
 .about-desc { font-size: 13px; color: var(--text-2); line-height: 1.8; margin-bottom: 24px; }
 
 .about-stats { display: flex; gap: 0; width: 100%; border: 1px solid var(--panel-border); border-radius: 14px; overflow: hidden; margin-bottom: 20px; }

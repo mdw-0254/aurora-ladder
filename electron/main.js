@@ -454,11 +454,25 @@ function main() {
     return { ok: true };
   }
 
-  // 启动后自动检查：发现新版本弹窗，点击「立即更新」自动下载并替换重启
-  async function autoCheckUpdate() {
-    let r = null;
-    try { r = await checkUpdate(); } catch (e) { r = { error: String(e && e.message || e) }; }
-    if (!r || r.error || !r.hasUpdate) return;
+  // 同一会话内已提醒过的版本号（避免反复打扰）
+  let notifiedVersion = '';
+
+  // 更新提醒：托盘气泡通知，点击气泡弹出更新对话框
+  function notifyUpdate(r) {
+    if (!tray) { showUpdateDialog(r); return; }
+    try {
+      tray.displayBalloon({
+        title: '发现新版本 v' + r.latest,
+        content: 'Aurora v' + r.current + ' → v' + r.latest + '，点击查看更新'
+      });
+      tray.once('balloon-click', () => showUpdateDialog(r));
+    } catch (e) {
+      showUpdateDialog(r);
+    }
+  }
+
+  // 更新对话框：点击「立即更新」自动下载并替换重启
+  async function showUpdateDialog(r) {
     const opts = {
       type: 'info',
       title: '发现新版本',
@@ -468,8 +482,20 @@ function main() {
       defaultId: 0,
       cancelId: 1
     };
-    const { response } = win ? await dialog.showMessageBox(win, opts) : await dialog.showMessageBox(opts);
+    const { response } = (win && !win.isDestroyed()) ? await dialog.showMessageBox(win, opts) : await dialog.showMessageBox(opts);
     if (response === 0 && r.downloadUrl) applyUpdate(r.downloadUrl);
+  }
+
+  // 后台检查更新：发现新版本时以托盘气泡提醒（启动时 + 运行期间周期检查共用）
+  async function autoCheckUpdate() {
+    let r = null;
+    try { r = await checkUpdate(); } catch (e) { r = { error: String(e && e.message || e) }; }
+    if (!r || r.error || !r.hasUpdate) return;
+    // 通知渲染进程：「关于」页显示"有新版本"气泡
+    broadcast('updateAvailable', { latest: r.latest, current: r.current, downloadUrl: r.downloadUrl });
+    if (r.latest === notifiedVersion) return; // 本会话已提醒过该版本
+    notifiedVersion = r.latest;
+    notifyUpdate(r);
   }
 
   // ---------- 生命周期 ----------
@@ -492,9 +518,10 @@ function main() {
       setTimeout(() => core.connect(), 800);
     }
 
-    // 启动后延迟自动检查更新（避免阻塞首屏；仅当已配置 GitHub 仓库时启用）
+    // 更新检查：启动后 5 秒检查一次 + 运行期间每 4 小时周期检查，有新版则以托盘气泡提醒
     if (UPDATE_CONFIGURED) {
-      setTimeout(() => { autoCheckUpdate().catch(() => {}); }, 3000);
+      setTimeout(() => { autoCheckUpdate().catch(() => {}); }, 5000);
+      setInterval(() => { autoCheckUpdate().catch(() => {}); }, 4 * 60 * 60 * 1000);
     }
 
     // 冒烟测试钩子：AURORA_SMOKE=1 时自动连接→观察→断开→退出

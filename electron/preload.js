@@ -32,5 +32,6 @@ contextBridge.exposeInMainWorld('aurora', {
   onStateUpdate: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('stateUpdate', l); return () => ipcRenderer.removeListener('stateUpdate', l); },
   onLogAppend: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('logAppend', l); return () => ipcRenderer.removeListener('logAppend', l); },
   onConnectionsUpdate: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('connectionsUpdate', l); return () => ipcRenderer.removeListener('connectionsUpdate', l); },
-  onUpdateProgress: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('updateProgress', l); return () => ipcRenderer.removeListener('updateProgress', l); }
+  onUpdateProgress: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('updateProgress', l); return () => ipcRenderer.removeListener('updateProgress', l); },
+  onUpdateAvailable: (cb) => { const l = (_e, v) => cb(v); ipcRenderer.on('updateAvailable', l); return () => ipcRenderer.removeListener('updateAvailable', l); }
 });

@@ -28,6 +28,7 @@ export const store = reactive({
   platform: { platform: 'win32', arch: 'x64' },
   weather: null,
   activePage: 'dashboard',
+  updateInfo: null,
   busy: false
 });
 
@@ -67,6 +68,7 @@ export async function initApp() {
     if (store.logs.length > 500) store.logs.splice(0, store.logs.length - 500);
   });
   api.onConnectionsUpdate((list) => (store.connections = list));
+  api.onUpdateAvailable((info) => (store.updateInfo = info));
 }
 
 export async function connect() {
